@@ -22,6 +22,7 @@ public class SecondFragment extends Fragment {
     ) {
 
         binding = FragmentSecondBinding.inflate(inflater, container, false);
+        binding.textviewSecond.setText("Eventually we can display text here");
         return binding.getRoot();
 
     }

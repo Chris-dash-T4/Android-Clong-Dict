@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -56,16 +57,11 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     }
                     if (a==null) Snackbar.make(v,"thing is not", Snackbar.LENGTH_SHORT).show();
                     else Toast.makeText(a,getAdapterPosition()+" clicked", Toast.LENGTH_LONG);
-                    List<Fragment> fs = a.getSupportFragmentManager().getFragments();
-                    if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
-                    for (Fragment f :
-                            fs) {
-                        if (f!=null && f.isVisible()) {
-                            NavHostFragment.findNavController(f)
-                                    .navigate(R.id.action_FirstFragment_to_SecondFragment);
-                            //Snackbar.make(v,"yay",Snackbar.LENGTH_SHORT).show();
-                        }
-                    }
+                    FragmentManager fs = a.getSupportFragmentManager();//.getFragments();
+                    // TODO get entryFragment textviews
+                    //fs.findFragmentById(R.id.entryFragment).getView();
+                    NavHostFragment.findNavController(fs.findFragmentById(R.id.dictFragment))
+                            .navigate(R.id.action_FirstFragment_to_SecondFragment);
                     /*
                      */
                 }
