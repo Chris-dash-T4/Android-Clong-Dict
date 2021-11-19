@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -26,29 +28,32 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
-    private RecyclerView recyclerView;
-    private ArrayList<String> skollerninnilooks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        skollerninnilooks = new ArrayList<>();
-        skollerninnilooks.add("test1");
-        skollerninnilooks.add("test2");
+
+        /*
+        Parse.initialize(new Parse.Configuration.Builder(this)
+                .applicationId("RcvzM8NjXDiwqeO6PaegPzir994ema2tUlfQLKhY")
+                .clientKey("KCTjOUxuvevuzZKHWlmCK5nMkevhlI0X6V2Gn3S9")
+                .server("https://parseapi.back4app.com")
+                .build()
+        );//*/
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
-
+        /*
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        recyclerView = findViewById(R.id.recView1);
-        if (recyclerView != null && recyclerView.getAdapter() != null) {
-            // how to add thing
-        }
+         */
+        FragmentManager fm = this.getSupportFragmentManager();
+        fm.beginTransaction().setReorderingAllowed(true)
+                .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)
+                .addToBackStack("dict").commit();
 
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,8 +88,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        NavController navController = null; //Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public void setSndArgs(Bundle args) {
+        Fragment snd = this.getSupportFragmentManager().findFragmentById(R.id.entryFragment);
+        snd.setArguments(args);
     }
 }

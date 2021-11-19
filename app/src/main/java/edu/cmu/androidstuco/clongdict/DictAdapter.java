@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,6 +44,9 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
         public ViewHolder(View v) {
             super(v);
             // Define click listener for the ViewHolder's View.
+            wordView = (TextView) v.findViewById(R.id.dictWordTV);
+            defView = (TextView) v.findViewById(R.id.dictDefTV);
+            pronView = (TextView) v.findViewById(R.id.dictPronTV);
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -57,18 +62,40 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     }
                     if (a==null) Snackbar.make(v,"thing is not", Snackbar.LENGTH_SHORT).show();
                     else Toast.makeText(a,getAdapterPosition()+" clicked", Toast.LENGTH_LONG);
-                    FragmentManager fs = a.getSupportFragmentManager();//.getFragments();
+                    FragmentManager fm = a.getSupportFragmentManager();//.getFragments();
+                    List<Fragment> fs = fm.getFragments();
+                    if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
                     // TODO get entryFragment textviews
-                    //fs.findFragmentById(R.id.entryFragment).getView();
-                    NavHostFragment.findNavController(fs.findFragmentById(R.id.dictFragment))
+                    Bundle b0 = new Bundle();
+                    b0.putString("word",wordView.getText().toString());
+                    SecondFragment snd = new SecondFragment();
+                    //if (snd != null)
+                    snd.setArguments(b0);
+                    //else a.setSndArgs(b0);
+                    FragmentTransaction txn = fm.beginTransaction();
+                    txn.setReorderingAllowed(true);
+                    txn.replace(R.id.fragment_container_view_tag,snd,null);
+                    txn.commit();
+                    /*
+                    for (Fragment f :
+                            fs) {
+                        if (f!=null && f.isVisible()) {
+                            NavHostFragment.findNavController(f)
+                                    .navigate(R.id.action_FirstFragment_to_SecondFragment);
+                            //Snackbar.make(v,"yay",Snackbar.LENGTH_SHORT).show();
+                        }
+                    }
+                    /*
+                    // Though perhaps more efficient, this crashes the app ¯\_(ツ)_/¯
+                    NavHostFragment.findNavController(fm.findFragmentById(R.id.dictFragment))
                             .navigate(R.id.action_FirstFragment_to_SecondFragment);
                     /*
+                    fs.findFragmentById(R.id.entryFragment).getView();
+                    NavHostFragment.findNavController(fs.findFragmentById(R.id.dictFragment))
+                            .navigate(R.id.action_FirstFragment_to_SecondFragment);
                      */
                 }
             });
-            wordView = (TextView) v.findViewById(R.id.dictWordTV);
-            defView = (TextView) v.findViewById(R.id.dictDefTV);
-            pronView = (TextView) v.findViewById(R.id.dictPronTV);
         }
 
         public TextView getWordView() {

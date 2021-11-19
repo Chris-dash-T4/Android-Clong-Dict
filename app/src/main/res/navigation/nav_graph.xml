@@ -3,26 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/dictFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
+        android:id="@+id/dictFragment"
         android:name="edu.cmu.androidstuco.clongdict.FirstFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_first">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            app:destination="@id/entryFragment" />
+        <action
+            android:id="@+id/action_dictFragment_to_placeholder"
+            app:destination="@id/entryFragmentPlaceholder" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
+        android:id="@+id/entryFragment"
         android:name="edu.cmu.androidstuco.clongdict.SecondFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+            app:destination="@id/dictFragment" />
     </fragment>
+    <fragment android:id="@+id/entryFragmentPlaceholder" />
 </navigation>
