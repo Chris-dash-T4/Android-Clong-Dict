@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
 }
+apply plugin: 'com.google.gms.google-services'
 
 ext {
     parseVersion = "2.0.6"
@@ -51,4 +52,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     //implementation "com.github.parse-community.Parse-SDK-Android:parse:$parseVersion"
     //implementation 'com.squareup.okhttp3:logging-interceptor:3.8.1'
+    implementation platform('com.google.firebase:firebase-bom:29.0.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
 }

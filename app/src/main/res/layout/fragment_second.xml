@@ -1,31 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/entryFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".SecondFragment">
 
     <TextView
         android:id="@+id/word_display"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12px"
         android:layout_marginStart="12px"
-        android:layout_marginEnd="300px"
         android:text="hello"
-        app:layout_constraintBottom_toTopOf="@id/button_second"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textStyle="bold"
+        android:textSize="18pt"
+        android:layout_weight="1" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/pronunciation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12px"
+            android:layout_marginStart="12px"
+            android:textSize="12pt"
+            android:text="/null/"
+            android:layout_weight="1" />
+    <TextView
+        android:id="@+id/partOfSpeech"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12px"
+        android:layout_marginStart="12px"
+        android:textSize="12pt"
+        android:textStyle="italic"
+        android:text="Undefined"
+        android:layout_weight="1" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:layout_weight="5">
+    <TextView
+        android:id="@+id/definition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12px"
+        android:layout_marginStart="12px"
+        android:layout_marginEnd="12px"
+        android:text="Definition will appear here"
+         />
+    </ScrollView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:layout_marginTop="12px"
+        android:layout_marginStart="12px"
+        android:text="Etymology:"
+        android:layout_weight="1"/>
+    <TextView
+        android:id="@+id/etymology"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12px"
+        android:text="English: 'bruh'"
+        android:layout_weight="1" />
 
     <Button
         android:id="@+id/button_second"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/previous"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/word_display" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_marginTop="12px"
+        android:layout_marginBottom="12px"
+        android:layout_weight="1" />
+</LinearLayout>

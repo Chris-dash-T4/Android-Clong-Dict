@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "475314925927",
+    "project_id": "clongdict",
+    "storage_bucket": "clongdict.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475314925927:android:8b4a89c67e67e99ac4bfc2",
+        "android_client_info": {
+          "package_name": "edu.cmu.androidstuco.clongdict"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "475314925927-8f5h0h31g38l23r9miu8q0vak338nlaj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvfJwssd6f2_HSchF4cELO9VTg71-ujo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "475314925927-8f5h0h31g38l23r9miu8q0vak338nlaj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

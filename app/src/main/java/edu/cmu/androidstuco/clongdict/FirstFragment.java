@@ -13,7 +13,12 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.File;
 import java.util.Locale;
@@ -29,7 +34,7 @@ public class FirstFragment extends Fragment {
     protected RecyclerView.LayoutManager mLayoutManager;
     protected DictEntry[] mDataset;
 
-    private static final int DATASET_COUNT = 60;
+    private static final int DATASET_COUNT = 6;
     private static String jsonifiedDict;
 
     @Override
@@ -56,7 +61,8 @@ public class FirstFragment extends Fragment {
         // to the way ListView would layout elements. The RecyclerView.LayoutManager defines how
         // elements are laid out.
         mLayoutManager = new LinearLayoutManager(getActivity());
-        mAdapter = new DictAdapter(mDataset);
+        MainActivity a = (MainActivity) this.getActivity();
+        mAdapter = new DictAdapter(a.db,"huoxinde-jazk");
         Bundle h = this.getActivity().getIntent().getExtras();
         if (h!=null) {
             if (this.mAdapter != null) {
@@ -71,6 +77,7 @@ public class FirstFragment extends Fragment {
             }
             else
                 Toast.makeText(this.getActivity(), "balls and/or cock", Toast.LENGTH_LONG).show();
+            this.getActivity().getIntent().replaceExtras((Bundle) null);
         }
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -81,6 +88,7 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(0x0108002b);
         binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,9 +109,34 @@ public class FirstFragment extends Fragment {
         binding = null;
     }
 
-    /* TODO change from default */
     private void initDataset() {
         mDataset = new DictEntry[DATASET_COUNT];
+        MainActivity a = (MainActivity) this.getActivity();
+        a.db.collection("huoxinde-jazk") // TODO make variable
+            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                int i = 0;
+                for (QueryDocumentSnapshot doc :
+                        task.getResult()) {
+                    DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
+                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("n"))
+                        pos = DictEntry.PartOfSpeech.NOUN;
+                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("v"))
+                        pos = DictEntry.PartOfSpeech.VERB;
+                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("par"))
+                        pos = DictEntry.PartOfSpeech.PARTICLE;
+                    if (i>DATASET_COUNT) break;
+                    mDataset[i] = new DictEntry((String) doc.getData().get("word"),
+                            (String) doc.getData().get("pronunciation"),
+                            pos,
+                            (String) doc.getData().get("definition"),
+                            (String) doc.getData().get("etymology")
+                    );
+                }
+            }
+        });
+        /*
         // TODO get JSON from file not from text
         // File jsonData = new File(this.getActivity().getFilesDir(),"lang.json");
         jsonifiedDict = LingUtils.json;
@@ -127,11 +160,14 @@ public class FirstFragment extends Fragment {
                                             entry.getString("etymology")
                                             );
                 remaining--;
+                if (remaining <= 0) {
+                    break;
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-        for (int i = DATASET_COUNT - remaining; i < DATASET_COUNT; i++) {
+        }*/
+        for (int i = 0; i < DATASET_COUNT; i++) {
             mDataset[i] = new DictEntry("word","ipa", DictEntry.PartOfSpeech.UNDEFINED, "def", "etym");
         }
     }

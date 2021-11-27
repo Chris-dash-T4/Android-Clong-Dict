@@ -28,9 +28,6 @@ public class SecondFragment extends Fragment {
     ) {
 
         binding = FragmentSecondBinding.inflate(inflater, container, false);
-        Bundle args = this.getArguments();
-        if (args != null) binding.wordDisplay.setText("bruh");
-        else binding.wordDisplay.setText(Integer.toString(this.getId()));
         return binding.getRoot();
 
     }
@@ -39,7 +36,12 @@ public class SecondFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         Bundle args = this.getArguments();
-        if (args != null) binding.wordDisplay.setText("bruh");
+        if (args != null) {
+            binding.wordDisplay.setText(args.getString("word"));
+            binding.pronunciation.setText(args.getString("pron"));
+            binding.definition.setText(args.getString("def"));
+            binding.etymology.setText(args.getString("etym"));
+        }
         else binding.wordDisplay.setText(Integer.toString(this.getId()));
         binding.buttonSecond.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,6 +60,7 @@ public class SecondFragment extends Fragment {
                  */
             }
         });
+
     }
 
     @Override
