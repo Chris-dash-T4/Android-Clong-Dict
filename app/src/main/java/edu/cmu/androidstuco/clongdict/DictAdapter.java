@@ -91,7 +91,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     FragmentTransaction txn = fm.beginTransaction();
                     txn.setReorderingAllowed(true);
                     txn.replace(R.id.fragment_container_view_tag,snd,null);
-                    ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e);
+                    ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
                     txn.commit();
                 }
             });

@@ -88,19 +88,19 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(0x0108002b);
+        ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(0x0108002b); //Plus symbol, ic_input_add
+        /*
         binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "This button will do something eventually", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 // Toast.makeText(FirstFragment.this, "text", Toast.LENGTH_LONG);
-                /*
                 NavHostFragment.findNavController(FirstFragment.this)
                         .navigate(R.id.action_FirstFragment_to_SecondFragment);
-                 */
             }
         });
+        */
     }
 
     @Override

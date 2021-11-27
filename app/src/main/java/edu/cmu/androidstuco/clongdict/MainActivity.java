@@ -1,9 +1,11 @@
 package edu.cmu.androidstuco.clongdict;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
@@ -21,6 +23,7 @@ import edu.cmu.androidstuco.clongdict.EditActivity;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -33,8 +36,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,7 +82,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent i0 = new Intent(MainActivity.this, EditActivity.class);
-                startActivity(i0);
+                if (findViewById(R.id.word_display)!=null) {
+                    TextView tv = (TextView) findViewById(R.id.word_display);
+                    db.collection("huoxinde-jazk") //TODO make var
+                        .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            for (QueryDocumentSnapshot doc :
+                                    task.getResult()) {
+                                if (doc.getData().get("word").equals(tv.getText().toString())) {
+                                    i0.putExtra("id", doc.getId());
+                                    startActivity(i0);
+                                }
+                            }
+                        }
+                    });
+                }
+                else startActivity(i0);
             }
         });
 
