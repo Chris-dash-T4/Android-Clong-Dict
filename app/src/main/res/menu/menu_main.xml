@@ -8,8 +8,14 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_delete_entry"
+        android:orderInCategory="100"
+        android:title="Delete entry"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_upload"
         android:orderInCategory="100"
-        android:title="Upload data..."
+        android:title="@string/upload_data"
         app:showAsAction="never" />
 </menu>

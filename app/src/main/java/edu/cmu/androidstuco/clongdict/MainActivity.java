@@ -13,13 +13,10 @@ import android.view.View;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.recyclerview.widget.RecyclerView;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivityMainBinding;
-import edu.cmu.androidstuco.clongdict.EditActivity;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
@@ -84,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
                 Intent i0 = new Intent(MainActivity.this, EditActivity.class);
                 if (findViewById(R.id.word_display)!=null) {
                     TextView tv = (TextView) findViewById(R.id.word_display);
+
+                    // This grabs the ID of the given entry
+                    // Distinct titles are assumed, but not currently enforced
                     db.collection("huoxinde-jazk") //TODO make var
                         .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
@@ -155,6 +157,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (!super.onPrepareOptionsMenu(menu)) return false;
+        for (Fragment f : this.getSupportFragmentManager().getFragments()) {
+            if (f.isVisible()) {
+                if (f instanceof FirstFragment) {
+                    menu.findItem(R.id.action_delete_entry).setVisible(false);
+                    menu.findItem(R.id.action_settings).setVisible(true);
+                }
+                else if (f instanceof SecondFragment) {
+                    menu.findItem(R.id.action_delete_entry).setVisible(true);
+                    TextView tv = findViewById(R.id.word_display);
+                    if (tv != null) menu.findItem(R.id.action_delete_entry).setTitle("Delete entry «"+tv.getText()+"»");
+                    else menu.findItem(R.id.action_delete_entry).setTitle("Delete entry...");
+                    menu.findItem(R.id.action_settings).setVisible(false);
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -165,8 +188,90 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_upload) {
+            Intent sel = new Intent(Intent.ACTION_GET_CONTENT);
+            sel.addCategory(Intent.CATEGORY_OPENABLE);
+            sel.setType("*/*");
+            Intent i_s = Intent.createChooser(sel, "Press start to introduce new project");
+            startActivityForResult(i_s, 2);
+            return true;
+        }
+        if (id == R.id.action_delete_entry) {
+            TextView tv = findViewById(R.id.word_display);
+            if (tv == null) return false;
+            db.collection("huoxinde-jazk") //TODO make var
+                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    for (QueryDocumentSnapshot doc :
+                            task.getResult()) {
+                        if (doc.getData().get("word").equals(tv.getText().toString())) {
+                            Snackbar.make(MainActivity.this.findViewById(R.id.fragment_container_view_tag),
+                                    "Deletion is irreversable, do you want to delete «"+doc.getData().get("word")+"»?",
+                                    Snackbar.LENGTH_LONG)
+                                    .setAction("CONFIRM", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            // This actually deletes the thing
+                                            db.collection("huoxinde-jazk") // TODO var
+                                                    .document(doc.getId()).delete()
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void unused) {
+                                                            getSupportFragmentManager().beginTransaction()
+                                                                    .replace(R.id.fragment_container_view_tag,
+                                                                            FirstFragment.class,
+                                                                            null)
+                                                                    .commit();
+                                                            Snackbar.make(MainActivity.this
+                                                                            .findViewById(R.id.fragment_container_view_tag),
+                                                                    "Deletion Successful.", Snackbar.LENGTH_SHORT)
+                                                                    .show();
+                                                        }
+                                                    })
+                                                    .addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            Snackbar.make(MainActivity.this
+                                                                            .findViewById(R.id.fragment_container_view_tag),
+                                                                    "Deletion Failed.", Snackbar.LENGTH_SHORT)
+                                                                    .show();
+                                                        }
+                                                    });
+                                        }
+                                    })
+                                    .setActionTextColor(0xc0ff0000)
+                                    .show();
+                        }
+                    }
+                }
+            });
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Toast.makeText(this, (resultCode == RESULT_OK)?"все хорошо":"错了", Toast.LENGTH_SHORT);
+        if (resultCode != RESULT_OK) return;
+        Uri uri = data.getData();
+        File in = new File(uri.getPath());
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(in));
+            String json = "";
+            /*
+            String line;
+            while ((line = reader.readLine()) != null) {
+                json+=line;
+            }
+            Snackbar.make(binding.getRoot().getRootView(),json,Snackbar.LENGTH_LONG).show();
+             */
+            System.out.println("lolololololololololol\n\n\n\n\n\n\n\n\n\n\n\n\ntext\n\n\n\n\n\n\n");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

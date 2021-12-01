@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -42,7 +43,7 @@ public class SecondFragment extends Fragment {
             binding.definition.setText(args.getString("def"));
             binding.etymology.setText(args.getString("etym"));
         }
-        else binding.wordDisplay.setText(Integer.toString(this.getId()));
+        //else binding.wordDisplay.setText(Integer.toString(this.getId()));
         binding.buttonSecond.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
