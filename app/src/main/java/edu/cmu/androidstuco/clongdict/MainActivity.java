@@ -45,11 +45,13 @@ import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private FirebaseAuth mAuth;
     private HashMap<String,String> langs;
     public FirebaseFirestore db;
+
+    // I may hold on to this for future use
+    private AppBarConfiguration appBarConfiguration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,8 +106,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Authorize firebase instance
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
+            // naturally this won't be hardcoded forever
             mAuth.signInWithEmailAndPassword("ccrawfor@andrew.cmu.edu","9shVB4JW")
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -124,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
 
+        // Language metadata is stored in firebase
+        // not much is done with this now, but I plan to expand it so users can switch between languages
         db = FirebaseFirestore.getInstance();
         langs = new HashMap<>();
         db.collection("languages")
@@ -143,10 +149,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+        /*
         HashMap<String, Object> testLang = new HashMap<>();
         testLang.put("Name", "Ol'ưnsih");
         testLang.put("path","olunsih");
-        //db.collection("languages").add(testLang);
+        db.collection("languages").add(testLang);
+         */
     }
 
     @Override

@@ -39,6 +39,8 @@ public class EditActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
         if (getIntent().getExtras()!=null && getIntent().getExtras().get("id")!=null) {
+            // If the activity was accessed to edit an existing entry, fill the fields with
+            // the existing data for that entry
             String entry_id = (String) getIntent().getExtras().get("id");
             db.collection("huoxinde-jazk") // TODO var
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -47,7 +49,7 @@ public class EditActivity extends AppCompatActivity {
                     for (QueryDocumentSnapshot doc :
                             task.getResult()) {
                         if (doc.getId().equals(entry_id)) {
-                            Toast.makeText(EditActivity.this, (String) doc.getData().get("word"), Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(EditActivity.this, (String) doc.getData().get("word"), Toast.LENGTH_SHORT).show();
                             ((TextView) findViewById(R.id.word)).setText((CharSequence) doc.getData().get("word"), TextView.BufferType.EDITABLE);
                             ((TextView) findViewById(R.id.pronunciation)).setText((CharSequence) doc.getData().get("pronunciation"), TextView.BufferType.EDITABLE);
                             ((TextView) findViewById(R.id.definition)).setText((CharSequence) doc.getData().get("definition"), TextView.BufferType.EDITABLE);
@@ -78,6 +80,7 @@ public class EditActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Void unit) {
                             s0.dismiss();
+                            // Don't return to the main activity until all data has been successfully saved
                             startActivity(i1);
                         }
                     })

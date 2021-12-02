@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * NOTE: most of this code was unceremoniously yoinked from the Android GitHub page
+ * NOTE: Much of the starter code was unceremoniously yoinked from the Android GitHub page
  */
 public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
     private static final String TAG = "DictAdapter";
@@ -65,8 +65,6 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                 @SuppressLint("ResourceType")
                 @Override
                 public void onClick(View v) {
-                    //Log.d(TAG, "Element " + getAdapterPosition() + " clicked.");
-                    //System.out.println(getAdapterPosition() + " clicked");
 
                     // thank you stackoverflow
                     Context c0 = v.getContext();
@@ -75,12 +73,11 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                         if (c0 instanceof MainActivity) a = (MainActivity) c0;
                         else c0 = ((ContextWrapper)c0).getBaseContext();
                     }
-                    if (a==null) Snackbar.make(v,"thing is not", Snackbar.LENGTH_SHORT);//.show();
-                    else Toast.makeText(a,getAdapterPosition()+" clicked", Toast.LENGTH_LONG);//.show();
-                    FragmentManager fm = a.getSupportFragmentManager();//.getFragments();
+                    FragmentManager fm = a.getSupportFragmentManager();
                     List<Fragment> fs = fm.getFragments();
-                    if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
-                    // TODO get entryFragment textviews
+                    //if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
+
+                    // Put the entry data in a bundle to send to the viewing fragment
                     Bundle b0 = new Bundle();
                     b0.putString("word",wordView.getText().toString());
                     b0.putString("pron",pronView.getText().toString());
@@ -89,6 +86,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     SecondFragment snd = new SecondFragment();
                     snd.setArguments(b0);
                     FragmentTransaction txn = fm.beginTransaction();
+                    // allows for moving back to the list fragment w/o creating a new instance
                     txn.setReorderingAllowed(true);
                     txn.replace(R.id.fragment_container_view_tag,snd,null);
                     ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
@@ -119,17 +117,25 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
      * Initialize the dataset of the Adapter.
      *
      * @param dataSet DictEntry[] containing the data to populate views to be used by RecyclerView.
+     * @deprecated no longer using local data structures to populate
      */
     public DictAdapter(DictEntry[] dataSet) {
         mDataSet = new ArrayList<>(Arrays.asList(dataSet));
         mDataSet.add(0,new DictEntry("ArrayList Moment","sæm.pl", DictEntry.PartOfSpeech.UNDEFINED,"Западный текст",""));
     }
 
+    /**
+     * Initialize the dataset of the Adapter.
+     *
+     * @param db FirebaseFirestore representing the database
+     * @param path a String representing the collection in db that contains data for the current language
+     */
     public DictAdapter(FirebaseFirestore db,String path) {
         mDataSet = new ArrayList<>();
         db.collection(path).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                // Populates the dataSet with entries from Firebase
                 for (DocumentSnapshot doc :
                         task.getResult()) {
                     DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
@@ -147,6 +153,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     );
                     mDataSet.add(e);
                 }
+                // Refresh the View to show the newly-loaded entries
                 DictAdapter.this.notifyDataSetChanged();
             }
         });

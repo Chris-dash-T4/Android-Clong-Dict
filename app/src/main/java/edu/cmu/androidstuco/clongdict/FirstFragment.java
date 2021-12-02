@@ -62,23 +62,7 @@ public class FirstFragment extends Fragment {
         // elements are laid out.
         mLayoutManager = new LinearLayoutManager(getActivity());
         MainActivity a = (MainActivity) this.getActivity();
-        mAdapter = new DictAdapter(a.db,"huoxinde-jazk");
-        Bundle h = this.getActivity().getIntent().getExtras();
-        if (h!=null) {
-            if (this.mAdapter != null) {
-                Toast.makeText(this.getActivity(), "Added: " + h.getString("entry"), Toast.LENGTH_LONG).show();
-                this.mAdapter.pushElement(new DictEntry(
-                        h.getString("entry"),
-                        h.getString("pronunciation"),
-                        DictEntry.PartOfSpeech.UNDEFINED,
-                        h.getString("def"),
-                        h.getString("etym")));
-                System.out.println("pronc: "+h.getString("pronunciation"));
-            }
-            else
-                Toast.makeText(this.getActivity(), "balls and/or cock", Toast.LENGTH_LONG).show();
-            this.getActivity().getIntent().replaceExtras((Bundle) null);
-        }
+        mAdapter = new DictAdapter(a.db,"huoxinde-jazk"); // TODO make not hardcoded
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mLayoutManager);
         return rootView;
@@ -89,18 +73,6 @@ public class FirstFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(0x0108002b); //Plus symbol, ic_input_add
-        /*
-        binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "This button will do something eventually", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                // Toast.makeText(FirstFragment.this, "text", Toast.LENGTH_LONG);
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-            }
-        });
-        */
     }
 
     @Override

@@ -53,12 +53,9 @@ public class SecondFragment extends Fragment {
                     if (c0 instanceof MainActivity) a = (MainActivity) c0;
                     else c0 = ((ContextWrapper)c0).getBaseContext();
                 }
-                FragmentManager fm = a.getSupportFragmentManager();//.getFragments();
+                FragmentManager fm = a.getSupportFragmentManager();
+                // Return to list fragment
                 fm.beginTransaction().replace(R.id.fragment_container_view_tag,FirstFragment.class,null).commit();
-                /*
-                NavHostFragment.findNavController(SecondFragment.this)
-                        .navigate(R.id.action_SecondFragment_to_FirstFragment);
-                 */
             }
         });
 
