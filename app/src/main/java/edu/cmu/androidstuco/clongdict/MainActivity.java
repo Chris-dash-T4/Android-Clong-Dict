@@ -193,6 +193,12 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        if (id == R.id.action_search) {
+            Intent i_s = new Intent(MainActivity.this, SearchActivity.class);
+            i_s.setAction(Intent.ACTION_SEARCH);
+            startActivity(i_s);
+            return true;
+        }
         if (id == R.id.action_settings) {
             return true;
         }

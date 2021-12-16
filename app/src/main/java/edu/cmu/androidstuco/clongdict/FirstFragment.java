@@ -43,7 +43,7 @@ public class FirstFragment extends Fragment {
 
         // Initialize dataset, this data would usually come from a local content provider or
         // remote server.
-        initDataset();
+        // initDataset();
     } // onCreate yoinked from GitHub sample
 
     @Override
@@ -81,6 +81,7 @@ public class FirstFragment extends Fragment {
         binding = null;
     }
 
+    /*
     private void initDataset() {
         mDataset = new DictEntry[DATASET_COUNT];
         MainActivity a = (MainActivity) this.getActivity();
@@ -138,9 +139,10 @@ public class FirstFragment extends Fragment {
             }
         } catch (JSONException e) {
             e.printStackTrace();
-        }*/
+        }*-/
         for (int i = 0; i < DATASET_COUNT; i++) {
             mDataset[i] = new DictEntry("word","ipa", DictEntry.PartOfSpeech.UNDEFINED, "def", "etym");
         }
     }
+    */
 }
