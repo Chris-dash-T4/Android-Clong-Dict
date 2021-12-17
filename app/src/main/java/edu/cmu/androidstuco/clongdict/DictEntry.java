@@ -33,7 +33,7 @@ public class DictEntry {
     }
 
     public String getPronunciation() {
-        return "/"+pronunciation+"/";
+        return pronunciation;
     }
 
     public void setPronunciation(String pronunciation) {

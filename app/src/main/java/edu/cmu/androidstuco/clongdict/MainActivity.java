@@ -31,17 +31,21 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -271,19 +275,40 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, (resultCode == RESULT_OK)?"все хорошо":"错了", Toast.LENGTH_SHORT);
         if (resultCode != RESULT_OK) return;
         Uri uri = data.getData();
-        File in = new File(uri.getPath());
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(in));
-            String json = "";
-            /*
-            String line;
-            while ((line = reader.readLine()) != null) {
-                json+=line;
+            InputStream in = getContentResolver().openInputStream(uri);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder sb0 = new StringBuilder();
+            for (String line; (line = reader.readLine()) != null; ) {
+                sb0.append(line);
             }
-            Snackbar.make(binding.getRoot().getRootView(),json,Snackbar.LENGTH_LONG).show();
-             */
-            System.out.println("lolololololololololol\n\n\n\n\n\n\n\n\n\n\n\n\ntext\n\n\n\n\n\n\n");
-        } catch (FileNotFoundException e) {
+            String json = sb0.toString();
+            JSONTokener jtk = new JSONTokener(json);
+            JSONArray jArr = (JSONArray) jtk.nextValue();
+            for (int i = 0; i < jArr.length(); i++) {
+                JSONObject entry = jArr.getJSONObject(i);
+
+                HashMap<String, Object> e_map = new HashMap<>();
+                e_map.put("word",entry.getString("word").toString());
+                e_map.put("pronunciation",entry.getString("pronunciation").toString());
+                e_map.put("part_of_speech",entry.getString("part_speech")); // TODO
+                e_map.put("definition",entry.getString("definition").toString());
+                e_map.put("etymology",entry.getString("etymology").toString());
+                db.collection("huoxinde-jazk") // TODO make variable
+                        .add(e_map).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        System.out.println("congratusalafwihão");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        System.err.println("voi ei");
+                    }
+                });
+            }
+        } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
     }

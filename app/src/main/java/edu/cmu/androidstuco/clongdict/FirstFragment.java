@@ -38,15 +38,6 @@ public class FirstFragment extends Fragment {
     private static String jsonifiedDict;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Initialize dataset, this data would usually come from a local content provider or
-        // remote server.
-        // initDataset();
-    } // onCreate yoinked from GitHub sample
-
-    @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
