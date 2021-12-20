@@ -1,6 +1,8 @@
 package edu.cmu.androidstuco.clongdict;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -10,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
 
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
@@ -58,17 +61,10 @@ public class MainActivity extends AppCompatActivity {
     // I may hold on to this for future use
     private AppBarConfiguration appBarConfiguration;
 
+    @SuppressLint("ResourceType")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        /*
-        Parse.initialize(new Parse.Configuration.Builder(this)
-                .applicationId("RcvzM8NjXDiwqeO6PaegPzir994ema2tUlfQLKhY")
-                .clientKey("KCTjOUxuvevuzZKHWlmCK5nMkevhlI0X6V2Gn3S9")
-                .server("https://parseapi.back4app.com")
-                .build()
-        );//*/
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -120,6 +116,10 @@ public class MainActivity extends AppCompatActivity {
                                 if ("huoxinde-jazk".equals((String) document.getData().get("path"))) {
                                     ConWord.alphabet = (CharSequence) document.getData().get("alphabet");
                                     ConWord.ignored = (CharSequence) document.getData().get("ignored");
+                                    ConWord.clongTypeface = Typeface.create(
+                                            ResourcesCompat.getFont(MainActivity.this, R.font.yu_martian_bold),
+                                            Typeface.NORMAL
+                                    );
                                 }
                             }
                             if (langs.containsKey("huoxinde-jazk")) {

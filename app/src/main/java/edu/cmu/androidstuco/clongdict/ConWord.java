@@ -1,12 +1,16 @@
 package edu.cmu.androidstuco.clongdict;
 
+import android.graphics.Typeface;
+
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 
 import java.util.stream.IntStream;
 
 public class ConWord implements CharSequence {
     public static CharSequence alphabet = null;
     public static CharSequence ignored = null;
+    public static Typeface clongTypeface;
     private String word;
     private CharSequence sortString;
 

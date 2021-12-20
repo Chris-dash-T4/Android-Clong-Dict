@@ -59,6 +59,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
             super(v);
             // Define click listener for the ViewHolder's View.
             wordView = (TextView) v.findViewById(R.id.dictWordTV);
+            wordView.setTypeface(ConWord.clongTypeface);
             defView = (TextView) v.findViewById(R.id.dictDefTV);
             pronView = (TextView) v.findViewById(R.id.dictPronTV);
             etymView = (TextView) v.findViewById(R.id.dictEtymTV);
