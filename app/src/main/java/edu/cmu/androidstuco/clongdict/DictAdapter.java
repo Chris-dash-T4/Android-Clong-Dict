@@ -33,6 +33,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -153,10 +154,30 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     );
                     mDataSet.add(e);
                 }
+                
+                DictAdapter.this.sort();
                 // Refresh the View to show the newly-loaded entries
                 DictAdapter.this.notifyDataSetChanged();
             }
         });
+    }
+
+    public void sort() {
+        Comparator<DictEntry> c0 = new Comparator<DictEntry>() {
+            @Override
+            public int compare(DictEntry entry, DictEntry t1) {
+                CharSequence xs = entry.getWord().getSortString();
+                CharSequence ys = t1.getWord().getSortString();
+                for (int i = 0; i < Math.min(xs.length(),ys.length()); i++) {
+                    if (Character.compare(xs.charAt(i),ys.charAt(i)) < 0) return -1;
+                    if (Character.compare(xs.charAt(i),ys.charAt(i)) > 0) return 1;
+                }
+                if (xs.length() < ys.length()) return -1;
+                if (xs.length() > ys.length()) return 1;
+                return 0;
+            }
+        };
+        mDataSet.sort(c0);
     }
 
     // BEGIN_INCLUDE(recyclerViewOnCreateViewHolder)

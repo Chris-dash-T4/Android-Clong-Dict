@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -78,37 +79,6 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
          */
-        FragmentManager fm = this.getSupportFragmentManager();
-        fm.beginTransaction().setReorderingAllowed(true)
-                .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)
-                .addToBackStack("dict").commit();
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i0 = new Intent(MainActivity.this, EditActivity.class);
-                if (findViewById(R.id.word_display)!=null) {
-                    TextView tv = (TextView) findViewById(R.id.word_display);
-
-                    // This grabs the ID of the given entry
-                    // Distinct titles are assumed, but not currently enforced
-                    db.collection("huoxinde-jazk") //TODO make var
-                        .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            for (QueryDocumentSnapshot doc :
-                                    task.getResult()) {
-                                if (doc.getData().get("word").equals(tv.getText().toString())) {
-                                    i0.putExtra("id", doc.getId());
-                                    startActivity(i0);
-                                }
-                            }
-                        }
-                    });
-                }
-                else startActivity(i0);
-            }
-        });
 
         // Authorize firebase instance
         mAuth = FirebaseAuth.getInstance();
@@ -132,10 +102,11 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
 
-        // Language metadata is stored in firebase
-        // not much is done with this now, but I plan to expand it so users can switch between languages
+        // Initialize db
         db = FirebaseFirestore.getInstance();
         langs = new HashMap<>();
+        // Language metadata is stored in firebase
+        // not much is done with this now, but I plan to expand it so users can switch between languages
         db.collection("languages")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -145,8 +116,15 @@ public class MainActivity extends AppCompatActivity {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 //Toast.makeText(MainActivity.this,document.getId() + " => " + document.getData(), Toast.LENGTH_LONG).show();
                                 langs.put((String) document.getData().get("path"),(String) document.getData().get("Name"));
+                                // TODO make variable
+                                if ("huoxinde-jazk".equals((String) document.getData().get("path"))) {
+                                    ConWord.alphabet = (CharSequence) document.getData().get("alphabet");
+                                    ConWord.ignored = (CharSequence) document.getData().get("ignored");
+                                }
                             }
-                            if (langs.containsKey("huoxinde-jazk")) binding.toolbar.setTitle(langs.get("huoxinde-jazk"));
+                            if (langs.containsKey("huoxinde-jazk")) {
+                                binding.toolbar.setTitle(langs.get("huoxinde-jazk"));
+                            }
                         } else {
                             System.err.println("Error getting documents.");
                             task.getException().printStackTrace();
@@ -159,6 +137,53 @@ public class MainActivity extends AppCompatActivity {
         testLang.put("path","olunsih");
         db.collection("languages").add(testLang);
          */
+
+        binding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i0 = new Intent(MainActivity.this, EditActivity.class);
+                if (findViewById(R.id.word_display)!=null) {
+                    TextView tv = (TextView) findViewById(R.id.word_display);
+
+                    // This grabs the ID of the given entry
+                    // Distinct titles are assumed, but not currently enforced
+                    db.collection("huoxinde-jazk") //TODO make var
+                            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            for (QueryDocumentSnapshot doc :
+                                    task.getResult()) {
+                                if (doc.getData().get("word").equals(tv.getText().toString())) {
+                                    i0.putExtra("id", doc.getId());
+                                    startActivity(i0);
+                                }
+                            }
+                        }
+                    });
+                }
+                else startActivity(i0);
+            }
+        });
+
+        FragmentManager fm = this.getSupportFragmentManager();
+        if (getIntent() != null && getIntent().getBooleanExtra("display_mode", false)) {
+            Bundle b0 = new Bundle();
+            b0.putString("word",getIntent().getStringExtra("word"));
+            b0.putString("pron",getIntent().getStringExtra("pron"));
+            b0.putString("def" ,getIntent().getStringExtra("def"));
+            b0.putString("etym",getIntent().getStringExtra("etym"));
+            SecondFragment snd = new SecondFragment();
+            snd.setArguments(b0);
+            ((FloatingActionButton) findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
+            fm.beginTransaction().setReorderingAllowed(true)
+                .replace(R.id.fragment_container_view_tag,snd,null)
+                .commit();
+            return;
+        }
+        fm.beginTransaction().setReorderingAllowed(true)
+                .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)
+                .addToBackStack("dict").commit();
+
     }
 
     @Override

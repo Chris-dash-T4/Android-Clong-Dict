@@ -3,6 +3,7 @@ package edu.cmu.androidstuco.clongdict;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,11 +61,13 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 
                     // thank you stackoverflow
                     Context c0 = v.getContext();
-                    MainActivity a = null;
+                    SearchActivity a = null;
                     while (c0 instanceof ContextWrapper && a==null) {
-                        if (c0 instanceof MainActivity) a = (MainActivity) c0;
+                        if (c0 instanceof SearchActivity) a = (SearchActivity) c0;
                         else c0 = ((ContextWrapper)c0).getBaseContext();
                     }
+
+                    /** The following is from DictAdapter and does not work outside of MainActivity
                     FragmentManager fm = a.getSupportFragmentManager();
                     List<Fragment> fs = fm.getFragments();
                     //if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
@@ -83,6 +86,15 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                     txn.replace(R.id.fragment_container_view_tag,snd,null);
                     ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
                     txn.commit();
+                     */
+
+                    Intent disp = new Intent(a,MainActivity.class);
+                    disp.putExtra("display_mode",true);
+                    disp.putExtra("word",wordView.getText().toString());
+                    disp.putExtra("pron",pronView.getText().toString());
+                    disp.putExtra("def" , defView.getText().toString());
+                    disp.putExtra("etym",etymView.getText().toString());
+                    a.startActivity(disp);
                 }
             });
         }
@@ -151,7 +163,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                     String ignored = "`´";
                     if (query == null)
                         mDataSet.add(e);
-                    else if (e.getWord().toLowerCase(Locale.ROOT)
+                    else if (e.getWord().toString().toLowerCase(Locale.ROOT)
                             .replaceAll("["+ignored+"]","").indexOf(query) != -1)
                         mDataSet.add(e);
                     else if (e.getDefinition().toLowerCase(Locale.ROOT)

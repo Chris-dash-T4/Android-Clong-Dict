@@ -10,26 +10,26 @@ public class DictEntry {
         PARTICLE,
         UNDEFINED
     }
-    private String word;
+    private ConWord word;
     private String pronunciation;
     private PartOfSpeech lexCat;
     private String definition;
     private String etymology;
 
     public DictEntry(String word, String pronunc, PartOfSpeech lexCat, String def, String etym) {
-        this.word=word;
+        this.word=new ConWord(word);
         this.pronunciation=pronunc;
         this.lexCat=lexCat;
         this.definition=def;
         this.etymology=etym;
     }
 
-    public String getWord() {
+    public ConWord getWord() {
         return word;
     }
 
     public void setWord(String word) {
-        this.word = word;
+        this.word = new ConWord(word);
     }
 
     public String getPronunciation() {
@@ -82,7 +82,7 @@ public class DictEntry {
     }
 
     public String[] toStringArray() {
-        return new String[]{this.word, this.pronunciation, this.lexCat.toString(), this.definition, this.etymology};
+        return new String[]{this.word.toString(), this.pronunciation, this.lexCat.toString(), this.definition, this.etymology};
     }
 
 }
