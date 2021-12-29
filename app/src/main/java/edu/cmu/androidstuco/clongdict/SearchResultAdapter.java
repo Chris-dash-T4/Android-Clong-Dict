@@ -51,6 +51,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             super(v);
             // Define click listener for the ViewHolder's View.
             wordView = (TextView) v.findViewById(R.id.dictWordTV);
+            wordView.setTypeface(ConWord.clongTypeface);
             defView = (TextView) v.findViewById(R.id.dictDefTV);
             pronView = (TextView) v.findViewById(R.id.dictPronTV);
             etymView = (TextView) v.findViewById(R.id.dictEtymTV);
@@ -122,6 +123,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
      *
      * @param db FirebaseFirestore representing the database
      * @param path a String representing the collection in db that contains data for the current language
+     * @param query a String representing the current search query
      */
     public SearchResultAdapter(FirebaseFirestore db, String path, String query) {
         mDataSet = new ArrayList<>();
@@ -205,6 +207,25 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 SearchResultAdapter.this.notifyDataSetChanged();
             }
         });
+    }
+
+    /**
+     * Initialize the dataset of the Adapter.
+     *
+     * @param query a String representing the current search query
+     */
+    public SearchResultAdapter(String query) {
+        //LingUtils.dataset; // can't send objects thru intents? no problem.
+        mDataSet = new ArrayList<>();
+        for (int i=0; i<LingUtils.dataset.size(); i++) {
+            DictEntry e = LingUtils.dataset.get(i);
+            if (query == null) mDataSet.add(e);
+            else if (e.getWord().toString().replaceAll("[" + ConWord.ignored + "]", "").contains(query)
+                    || e.getDefinition().toLowerCase(Locale.ROOT).contains(query)
+                    || e.getEtymology().toLowerCase(Locale.ROOT).contains(query)) {
+                mDataSet.add(e);
+            }
+        }
     }
 
     /*

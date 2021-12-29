@@ -92,8 +92,10 @@ public class SecondFragment extends Fragment {
                     else c0 = ((ContextWrapper)c0).getBaseContext();
                 }
                 FragmentManager fm = a.getSupportFragmentManager();
+                Bundle b0 = new Bundle();
+                if (args.getInt("pos",-1) >= 0) b0.putInt("pos",args.getInt("pos"));
                 // Return to list fragment
-                fm.beginTransaction().replace(R.id.fragment_container_view_tag,FirstFragment.class,null).commit();
+                fm.beginTransaction().replace(R.id.fragment_container_view_tag,FirstFragment.class,b0).commit();
             }
         });
 

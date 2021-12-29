@@ -10,16 +10,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ClongDict">
         <activity
+            android:name=".ui.login.LoginActivity"
+            android:exported="true"
+            android:label="@string/title_activity_login" />
+        <activity
             android:name=".SearchActivity"
             android:exported="true"
-            android:launchMode="singleTop"
             android:label="@string/title_activity_search"
-            android:theme="@style/Theme.ClongDict.NoActionBar" >
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.ClongDict.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
-            <meta-data android:name="android.app.searchable"
-                android:resource="@xml/searchable"/>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
         </activity>
         <activity
             android:name=".EditActivity"

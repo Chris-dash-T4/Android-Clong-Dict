@@ -49,8 +49,8 @@ public class SearchActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent i0 = new Intent(SearchActivity.this, EditActivity.class);
+                startActivity(i0);
             }
         });
 
@@ -79,7 +79,7 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return onQueryTextSubmit(newText);//false;
+                return false; //onQueryTextSubmit(newText);
             }
         });
     }
@@ -95,8 +95,8 @@ public class SearchActivity extends AppCompatActivity {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             // Toast.makeText(this,"Query: "+query, Toast.LENGTH_LONG).show();
-            srAdapter = new SearchResultAdapter(FirebaseFirestore.getInstance(),
-                    "huoxinde-jazk", // TODO you know the thing
+            srAdapter = new SearchResultAdapter(/*FirebaseFirestore.getInstance(),
+                    "huoxinde-jazk", // TODO you know the thing*/
                     query==null?null:query.toLowerCase(Locale.ROOT));
             rView.setAdapter(srAdapter);
         }

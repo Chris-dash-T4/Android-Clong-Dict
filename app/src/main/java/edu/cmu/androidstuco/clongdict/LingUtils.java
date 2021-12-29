@@ -1,5 +1,6 @@
 package edu.cmu.androidstuco.clongdict;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -7,6 +8,7 @@ import java.util.Objects;
  * This class is not currently in use anywhere, but may be implemented later for data parsing, exports, etc.
  */
 public class LingUtils {
+    public static ArrayList<DictEntry> dataset;
     public static HashMap<Character,Character> phoneConverter;
 
     public static void initPhonemeConverter() {

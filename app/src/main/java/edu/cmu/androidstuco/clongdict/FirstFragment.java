@@ -1,6 +1,8 @@
 package edu.cmu.androidstuco.clongdict;
 
 import org.json.*;
+
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,10 +58,19 @@ public class FirstFragment extends Fragment {
         mAdapter = new DictAdapter(a.db,"huoxinde-jazk"); // TODO make not hardcoded
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mLayoutManager);
+        int pos;
+        if (getArguments() != null && (pos = getArguments().getInt("pos",-1)) >= 0)
+            mRecyclerView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mRecyclerView.scrollToPosition(Math.min(pos+6,mAdapter.getItemCount()-1));
+                }
+            }, 500);
         return rootView;
 
     }
 
+    @SuppressLint("ResourceType")
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 

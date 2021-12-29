@@ -85,6 +85,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     b0.putString("pron",pronView.getText().toString());
                     b0.putString("def" , defView.getText().toString());
                     b0.putString("etym",etymView.getText().toString());
+                    b0.putInt("pos",getAdapterPosition());
                     SecondFragment snd = new SecondFragment();
                     snd.setArguments(b0);
                     FragmentTransaction txn = fm.beginTransaction();
@@ -158,6 +159,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                 
                 DictAdapter.this.sort();
                 // Refresh the View to show the newly-loaded entries
+                LingUtils.dataset = mDataSet;
                 DictAdapter.this.notifyDataSetChanged();
             }
         });

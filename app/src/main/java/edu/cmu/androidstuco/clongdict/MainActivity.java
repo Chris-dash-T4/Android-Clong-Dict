@@ -20,6 +20,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivityMainBinding;
+import edu.cmu.androidstuco.clongdict.ui.login.LoginActivity;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -80,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
             // naturally this won't be hardcoded forever
-            mAuth.signInWithEmailAndPassword("ccrawfor@andrew.cmu.edu","9shVB4JW")
+            /*
+            mAuth.signInWithEmailAndPassword("ccrawfor@andrew.cmu.edu","PASSWORD CHANGED")
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -96,6 +98,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     });
+             */
+            Intent lo = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(lo);
+            return;
         }
 
         // Initialize db
@@ -229,6 +235,12 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_settings) {
+            return true;
+        }
+        if (id == R.id.action_login) {
+            mAuth.signOut();
+            Intent lo = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(lo);
             return true;
         }
         if (id == R.id.action_upload) {
