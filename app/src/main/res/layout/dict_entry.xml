@@ -32,6 +32,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Sample" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" ▪ "/>
+                <TextView
+                    android:id="@+id/dictPoSTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="italic"
+                    android:text="Sample" />
                 <!--android:textStyle="bold"-->
             </LinearLayout>
             <TextView

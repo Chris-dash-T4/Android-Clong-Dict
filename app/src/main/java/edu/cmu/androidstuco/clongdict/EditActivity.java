@@ -52,6 +52,7 @@ public class EditActivity extends AppCompatActivity {
                             //Toast.makeText(EditActivity.this, (String) doc.getData().get("word"), Toast.LENGTH_SHORT).show();
                             ((TextView) findViewById(R.id.word)).setText((CharSequence) doc.getData().get("word"), TextView.BufferType.EDITABLE);
                             ((TextView) findViewById(R.id.pronunciation)).setText((CharSequence) doc.getData().get("pronunciation"), TextView.BufferType.EDITABLE);
+                            ((TextView) findViewById(R.id.partOfSpeech)).setText((CharSequence) doc.getData().get("part_of_speech"), TextView.BufferType.EDITABLE);
                             ((TextView) findViewById(R.id.definition)).setText((CharSequence) doc.getData().get("definition"), TextView.BufferType.EDITABLE);
                             ((TextView) findViewById(R.id.etymology)).setText((CharSequence) doc.getData().get("etymology"), TextView.BufferType.EDITABLE);
                         }
@@ -68,7 +69,7 @@ public class EditActivity extends AppCompatActivity {
         HashMap<String, Object> e_map = new HashMap<>();
         e_map.put("word",((EditText)findViewById(R.id.word)).getText().toString());
         e_map.put("pronunciation",((EditText)findViewById(R.id.pronunciation)).getText().toString());
-        e_map.put("part_of_speech","Undefined"); // TODO
+        e_map.put("part_of_speech",((EditText)findViewById(R.id.partOfSpeech)).getText().toString());
         e_map.put("definition",((EditText)findViewById(R.id.definition)).getText().toString());
         e_map.put("etymology",((EditText)findViewById(R.id.etymology)).getText().toString());
         Snackbar s0 = Snackbar.make(view.getRootView(),"Saving...", Snackbar.LENGTH_INDEFINITE);

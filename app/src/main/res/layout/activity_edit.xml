@@ -50,7 +50,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:hint="Pronunciation"
-                android:imeActionLabel="@string/action_sign_in_short"
                 android:imeOptions="actionDone"
                 android:inputType="textPhonetic"
                 android:selectAllOnFocus="true"
@@ -59,20 +58,32 @@
                 app:layout_constraintTop_toBottomOf="@+id/word" />
 
             <EditText
+                android:id="@+id/partOfSpeech"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Part of Speech"
+                android:imeOptions="actionDone"
+                android:inputType="textPhonetic"
+                android:selectAllOnFocus="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/pronunciation" />
+
+            <EditText
                 android:id="@+id/definition"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:gravity="top|left"
                 android:hint="Definition"
-                android:imeActionLabel="@string/action_sign_in_short"
                 android:imeOptions="actionDone"
                 android:inputType="textLongMessage|textCapSentences|textMultiLine"
                 android:minHeight="96dp"
                 android:selectAllOnFocus="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/pronunciation" />
+                app:layout_constraintTop_toBottomOf="@+id/partOfSpeech" />
 
             <EditText
                 android:id="@+id/etymology"
@@ -80,7 +91,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:hint="Etymology"
-                android:imeActionLabel="@string/action_sign_in_short"
                 android:imeOptions="actionDone"
                 android:inputType="textPhonetic"
                 android:selectAllOnFocus="true"

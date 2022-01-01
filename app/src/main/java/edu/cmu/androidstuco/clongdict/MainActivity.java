@@ -176,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
             Bundle b0 = new Bundle();
             b0.putString("word",getIntent().getStringExtra("word"));
             b0.putString("pron",getIntent().getStringExtra("pron"));
+            b0.putString("lexcat",getIntent().getStringExtra("lexcat"));
             b0.putString("def" ,getIntent().getStringExtra("def"));
             b0.putString("etym",getIntent().getStringExtra("etym"));
             SecondFragment snd = new SecondFragment();

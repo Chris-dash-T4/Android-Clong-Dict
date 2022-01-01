@@ -45,6 +45,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
         private final TextView wordView;
         private final TextView defView;
         private final TextView pronView;
+        private final TextView posView;
         private final TextView etymView;
 
         public ViewHolder(View v) {
@@ -54,6 +55,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             wordView.setTypeface(ConWord.clongTypeface);
             defView = (TextView) v.findViewById(R.id.dictDefTV);
             pronView = (TextView) v.findViewById(R.id.dictPronTV);
+            posView = (TextView) v.findViewById(R.id.dictPoSTV);
             etymView = (TextView) v.findViewById(R.id.dictEtymTV);
             v.setOnClickListener(new View.OnClickListener() {
                 @SuppressLint("ResourceType")
@@ -93,6 +95,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                     disp.putExtra("display_mode",true);
                     disp.putExtra("word",wordView.getText().toString());
                     disp.putExtra("pron",pronView.getText().toString());
+                    disp.putExtra("lexcat",posView.getText().toString());
                     disp.putExtra("def" , defView.getText().toString());
                     disp.putExtra("etym",etymView.getText().toString());
                     a.startActivity(disp);
@@ -114,6 +117,10 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 
         public TextView getEtymView() {
             return etymView;
+        }
+
+        public TextView getPosView() {
+            return posView;
         }
     }
     // END_INCLUDE(recyclerViewSampleViewHolder)
@@ -149,20 +156,20 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                 // Populates the dataSet with entries from Firebase
                 for (DocumentSnapshot doc :
                         task.getResult()) {
-                    DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("n"))
-                        pos = DictEntry.PartOfSpeech.NOUN;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("v"))
-                        pos = DictEntry.PartOfSpeech.VERB;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("par"))
-                        pos = DictEntry.PartOfSpeech.PARTICLE;
                     DictEntry e = new DictEntry((String) doc.getData().get("word"),
                             (String) doc.getData().get("pronunciation"),
-                            pos,
+                            (String) doc.getData().get("part_of_speech"),
                             (String) doc.getData().get("definition"),
                             (String) doc.getData().get("etymology")
                     );
-                    String ignored = "`´";
+                    String ignored;
+                    try {
+                        ignored = ConWord.ignored.toString();
+                        if (ConWord.ignored == null) throw new NullPointerException();
+                    }
+                    catch (Exception exp) {
+                        ignored = "`´";
+                    }
                     if (query == null)
                         mDataSet.add(e);
                     else if (e.getWord().toString().toLowerCase(Locale.ROOT)
@@ -210,7 +217,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     }
 
     /**
-     * Initialize the dataset of the Adapter.
+     * Initialize the dataset of the Adapter by importing the data from a different adapter.
      *
      * @param query a String representing the current search query
      */
@@ -256,6 +263,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
         // with that element
         viewHolder.getWordView().setText(mDataSet.get(position).getWord());
         viewHolder.getPronView().setText(mDataSet.get(position).getPronunciation());
+        viewHolder.getPosView().setText(mDataSet.get(position).getPartOfSpeech());
         viewHolder.getDefView().setText(mDataSet.get(position).getDefinition());
         viewHolder.getEtymView().setText(mDataSet.get(position).getEtymology());
     }

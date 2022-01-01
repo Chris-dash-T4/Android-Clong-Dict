@@ -77,6 +77,7 @@ public class SecondFragment extends Fragment {
             binding.wordDisplay.setText(args.getString("word"));
             binding.wordDisplay.setTypeface(ConWord.clongTypeface);
             binding.pronunciation.setText(args.getString("pron"));
+            binding.partOfSpeech.setText(args.getString("lexcat"));
             Spannable formatDef = format(args.getString("def"));
             binding.definition.setText(formatDef);
             binding.etymology.setText(args.getString("etym"));

@@ -4,6 +4,7 @@ import android.content.Intent;
 
 public class DictEntry {
     // TODO make partOfSpeech user-determined.
+    @Deprecated
     protected enum PartOfSpeech {
         NOUN,
         VERB,
@@ -12,11 +13,11 @@ public class DictEntry {
     }
     private ConWord word;
     private String pronunciation;
-    private PartOfSpeech lexCat;
+    private String lexCat;
     private String definition;
     private String etymology;
 
-    public DictEntry(String word, String pronunc, PartOfSpeech lexCat, String def, String etym) {
+    public DictEntry(String word, String pronunc, String lexCat, String def, String etym) {
         this.word=new ConWord(word);
         this.pronunciation=pronunc;
         this.lexCat=lexCat;
@@ -40,11 +41,13 @@ public class DictEntry {
         this.pronunciation = pronunciation;
     }
 
-    public PartOfSpeech getLexCat() {
+    public String getLexCat() {
         return lexCat;
     }
 
     public String getPartOfSpeech() {
+        return lexCat;
+        /*
         switch (lexCat) {
             case NOUN:
                 return "n.";
@@ -55,9 +58,10 @@ public class DictEntry {
             default:
                 return "unk.";
         }
+        */
     }
 
-    public void setLexCat(PartOfSpeech lexCat) {
+    public void setLexCat(String lexCat) {
         this.lexCat = lexCat;
     }
 
@@ -78,11 +82,11 @@ public class DictEntry {
     }
 
     public String toString() {
-        return this.word+"$"+this.pronunciation+"$"+this.lexCat.toString()+"$"+this.definition.replace('$','€')+"$"+this.etymology;
+        return this.word+"$"+this.pronunciation+"$"+this.lexCat+"$"+this.definition.replace('$','€')+"$"+this.etymology;
     }
 
     public String[] toStringArray() {
-        return new String[]{this.word.toString(), this.pronunciation, this.lexCat.toString(), this.definition, this.etymology};
+        return new String[]{this.word.toString(), this.pronunciation, this.lexCat, this.definition, this.etymology};
     }
 
 }

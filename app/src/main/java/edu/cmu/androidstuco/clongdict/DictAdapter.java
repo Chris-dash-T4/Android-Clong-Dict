@@ -53,6 +53,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
         private final TextView wordView;
         private final TextView defView;
         private final TextView pronView;
+        private final TextView posView;
         private final TextView etymView;
 
         public ViewHolder(View v) {
@@ -62,6 +63,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
             wordView.setTypeface(ConWord.clongTypeface);
             defView = (TextView) v.findViewById(R.id.dictDefTV);
             pronView = (TextView) v.findViewById(R.id.dictPronTV);
+            posView = (TextView) v.findViewById(R.id.dictPoSTV);
             etymView = (TextView) v.findViewById(R.id.dictEtymTV);
             v.setOnClickListener(new View.OnClickListener() {
                 @SuppressLint("ResourceType")
@@ -83,6 +85,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     Bundle b0 = new Bundle();
                     b0.putString("word",wordView.getText().toString());
                     b0.putString("pron",pronView.getText().toString());
+                    b0.putString("lexcat",posView.getText().toString());
                     b0.putString("def" , defView.getText().toString());
                     b0.putString("etym",etymView.getText().toString());
                     b0.putInt("pos",getAdapterPosition());
@@ -113,6 +116,10 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
         public TextView getEtymView() {
             return etymView;
         }
+
+        public TextView getPosView() {
+            return posView;
+        }
     }
     // END_INCLUDE(recyclerViewSampleViewHolder)
 
@@ -124,7 +131,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
      */
     public DictAdapter(DictEntry[] dataSet) {
         mDataSet = new ArrayList<>(Arrays.asList(dataSet));
-        mDataSet.add(0,new DictEntry("ArrayList Moment","sæm.pl", DictEntry.PartOfSpeech.UNDEFINED,"Западный текст",""));
+        mDataSet.add(0,new DictEntry("ArrayList Moment","sæm.pl", "Undefined","Западный текст",""));
     }
 
     /**
@@ -141,6 +148,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                 // Populates the dataSet with entries from Firebase
                 for (DocumentSnapshot doc :
                         task.getResult()) {
+                    /*
                     DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
                     if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("n"))
                         pos = DictEntry.PartOfSpeech.NOUN;
@@ -148,9 +156,10 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                         pos = DictEntry.PartOfSpeech.VERB;
                     if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("par"))
                         pos = DictEntry.PartOfSpeech.PARTICLE;
+                    */
                     DictEntry e = new DictEntry((String) doc.getData().get("word"),
                             (String) doc.getData().get("pronunciation"),
-                            pos,
+                            (String) doc.getData().get("part_of_speech"),
                             (String) doc.getData().get("definition"),
                             (String) doc.getData().get("etymology")
                     );
@@ -206,6 +215,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
         // with that element
         viewHolder.getWordView().setText(mDataSet.get(position).getWord());
         viewHolder.getPronView().setText(mDataSet.get(position).getPronunciation());
+        viewHolder.getPosView().setText(mDataSet.get(position).getPartOfSpeech());
         viewHolder.getDefView().setText(mDataSet.get(position).getDefinition());
         viewHolder.getEtymView().setText(mDataSet.get(position).getEtymology());
     }
