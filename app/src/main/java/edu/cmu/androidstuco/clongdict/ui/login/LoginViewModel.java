@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModel;
 
 import android.util.Patterns;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import edu.cmu.androidstuco.clongdict.data.LoginRepository;
 import edu.cmu.androidstuco.clongdict.data.Result;
 import edu.cmu.androidstuco.clongdict.data.model.LoggedInUser;
@@ -31,11 +34,13 @@ public class LoginViewModel extends ViewModel {
 
     public void login(String username, String password) {
         // can be launched in a separate asynchronous job
-        Result<LoggedInUser> result = loginRepository.login(username, password);
+        Result<FirebaseAuth> result = loginRepository.login(username, password);
+        LoggedInUser fakeUser = new LoggedInUser(null,username);
 
         if (result instanceof Result.Success) {
-            LoggedInUser data = ((Result.Success<LoggedInUser>) result).getData();
-            loginResult.setValue(new LoginResult(new LoggedInUserView(data.getDisplayName())));
+            FirebaseUser fbUser = ((Result.Success<FirebaseAuth>) result).getData().getCurrentUser();
+            LoggedInUser user = fbUser==null?fakeUser:new LoggedInUser(fbUser.getUid(),fbUser.getDisplayName());
+            loginResult.setValue(new LoginResult(new LoggedInUserView(user.getDisplayName())));
         } else {
             loginResult.setValue(new LoginResult(R.string.login_failed));
         }

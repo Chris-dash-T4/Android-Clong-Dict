@@ -11,6 +11,7 @@ public class ConWord implements CharSequence {
     public static CharSequence alphabet = null;
     public static CharSequence ignored = null;
     public static Typeface clongTypeface;
+    public static String lang = null; //"huoxinde-jazk"; // May change depending on defaults
     private String word;
     private CharSequence sortString;
 
@@ -22,6 +23,7 @@ public class ConWord implements CharSequence {
     public CharSequence getSortString() {
         if (sortString == null) {
             StringBuilder s0 = new StringBuilder();
+            if (alphabet == null) return null;
             for (char c : word.toCharArray()) {
                 int v = alphabet.toString().indexOf(c);
                 if (v >= 0) s0.append((char) v);

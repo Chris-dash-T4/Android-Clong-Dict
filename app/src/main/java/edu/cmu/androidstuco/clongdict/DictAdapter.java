@@ -7,6 +7,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -178,15 +179,28 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
         Comparator<DictEntry> c0 = new Comparator<DictEntry>() {
             @Override
             public int compare(DictEntry entry, DictEntry t1) {
-                CharSequence xs = entry.getWord().getSortString();
-                CharSequence ys = t1.getWord().getSortString();
-                for (int i = 0; i < Math.min(xs.length(),ys.length()); i++) {
-                    if (Character.compare(xs.charAt(i),ys.charAt(i)) < 0) return -1;
-                    if (Character.compare(xs.charAt(i),ys.charAt(i)) > 0) return 1;
+                try {
+                    CharSequence xs = entry.getWord().getSortString();
+                    CharSequence ys = t1.getWord().getSortString();
+                    for (int i = 0; i < Math.min(xs.length(), ys.length()); i++) {
+                        if (Character.compare(xs.charAt(i), ys.charAt(i)) < 0) return -1;
+                        if (Character.compare(xs.charAt(i), ys.charAt(i)) > 0) return 1;
+                    }
+                    if (xs.length() < ys.length()) return -1;
+                    if (xs.length() > ys.length()) return 1;
+                    return 0;
                 }
-                if (xs.length() < ys.length()) return -1;
-                if (xs.length() > ys.length()) return 1;
-                return 0;
+                catch (Exception e) {
+                    Handler h0 = new Handler();
+                    int[] res = new int[]{2};
+                    h0.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            res[0] = compare(entry,t1);
+                        }
+                    },100);
+                    return res[0];
+                }
             }
         };
         mDataSet.sort(c0);

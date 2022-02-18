@@ -42,7 +42,7 @@ public class EditActivity extends AppCompatActivity {
             // If the activity was accessed to edit an existing entry, fill the fields with
             // the existing data for that entry
             String entry_id = (String) getIntent().getExtras().get("id");
-            db.collection("huoxinde-jazk") // TODO var
+            db.collection(ConWord.lang) // TODO var
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -75,7 +75,7 @@ public class EditActivity extends AppCompatActivity {
         Snackbar s0 = Snackbar.make(view.getRootView(),"Saving...", Snackbar.LENGTH_INDEFINITE);
         if (getIntent().getExtras()!=null && getIntent().getExtras().get("id")!=null) {
             String entry_id = (String) getIntent().getExtras().get("id");
-            db.collection("huoxinde-jazk") // TODO make variable
+            db.collection(ConWord.lang) // TODO make variable
                     .document(entry_id).set(e_map)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
@@ -94,7 +94,7 @@ public class EditActivity extends AppCompatActivity {
                     });
         }
         else {
-            db.collection("huoxinde-jazk") // TODO make variable
+            db.collection(ConWord.lang) // TODO make variable
                     .add(e_map).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(DocumentReference documentReference) {

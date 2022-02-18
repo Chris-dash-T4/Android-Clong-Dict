@@ -10,12 +10,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.view.ContextMenu;
+import android.view.SubMenu;
 import android.view.View;
 
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -32,6 +37,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -58,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private HashMap<String,String> langs;
     public FirebaseFirestore db;
+    private AppBarConfiguration mAppBarConfiguration;
 
     // I may hold on to this for future use
     private AppBarConfiguration appBarConfiguration;
@@ -70,11 +77,25 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
+        setSupportActionBar(binding.contentMain.toolbar);
         /*
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+         */
+        // TODO DrawerLayout drawer = binding.contentMain.drawerLayout;
+        //NavigationView navigationView = binding.navView;
+        /*
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                .setOpenableLayout(drawer)
+                .build();
+
+         */
+        /*
+        NavController navController = Navigation.findNavController(this, R.id.fragment_container_view_tag);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
          */
 
         // Authorize firebase instance
@@ -115,21 +136,44 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
+                            int i = 0;
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 //Toast.makeText(MainActivity.this,document.getId() + " => " + document.getData(), Toast.LENGTH_LONG).show();
                                 langs.put((String) document.getData().get("path"),(String) document.getData().get("Name"));
+                                // Populate navdrawer menu
+                                Menu drawer = binding.navView.getMenu();
+                                drawer.add(R.id.langs_menu, ((String) document.getData().get("path")).hashCode(),
+                                            i, (String) document.getData().get("Name"))
+                                          .setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                                              @Override
+                                              public boolean onMenuItemClick(MenuItem item) {
+                                                  loadLanguage(
+                                                          (String) document.getData().get("path"),
+                                                          (String) document.getData().get("Name"),
+                                                          (CharSequence) document.getData().get("alphabet"),
+                                                          (CharSequence) document.getData().get("ignored")
+                                                          );
+                                                  return true;
+                                              }
+                                          });
+
                                 // TODO make variable
-                                if ("huoxinde-jazk".equals((String) document.getData().get("path"))) {
+                                if (ConWord.lang != null && ConWord.lang.equals((String) document.getData().get("path"))) {
                                     ConWord.alphabet = (CharSequence) document.getData().get("alphabet");
                                     ConWord.ignored = (CharSequence) document.getData().get("ignored");
+                                    int fontface = R.font.liberation_serif_bold_italic;
+                                    if (ConWord.lang.equals("huoxinde-jazk"))
+                                        fontface = R.font.yu_martian_bold;
                                     ConWord.clongTypeface = Typeface.create(
-                                            ResourcesCompat.getFont(MainActivity.this, R.font.yu_martian_bold),
+                                            ResourcesCompat.getFont(MainActivity.this, fontface),
                                             Typeface.NORMAL
                                     );
+                                    drawer.findItem(((String) document.getData().get("path")).hashCode()).setChecked(true).setEnabled(false);
                                 }
+                                i++;
                             }
-                            if (langs.containsKey("huoxinde-jazk")) {
-                                binding.toolbar.setTitle(langs.get("huoxinde-jazk"));
+                            if (ConWord.lang != null && langs.containsKey(ConWord.lang)) {
+                                binding.contentMain.toolbar.setTitle(langs.get(ConWord.lang));
                             }
                         } else {
                             System.err.println("Error getting documents.");
@@ -153,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // This grabs the ID of the given entry
                     // Distinct titles are assumed, but not currently enforced
-                    db.collection("huoxinde-jazk") //TODO make var
+                    db.collection(ConWord.lang) //TODO make var
                             .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -187,10 +231,40 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
             return;
         }
-        fm.beginTransaction().setReorderingAllowed(true)
+
+        if (ConWord.lang != null) {
+            fm.beginTransaction().setReorderingAllowed(true)
+                    .replace(R.id.fragment_container_view_tag, FirstFragment.class, null)
+                    .addToBackStack("dict").commit();
+        }
+        else {
+            fm.beginTransaction().setReorderingAllowed(true)
+                    .replace(R.id.fragment_container_view_tag, HomeFragment.class, null)
+                    .addToBackStack("dict").commit();
+        }
+    }
+
+    public void loadLanguage(String path, String name, CharSequence alphabet, CharSequence ignored) {
+        Menu drawerMenu = binding.navView.getMenu();
+        drawerMenu.setGroupEnabled(R.id.langs_menu,true);
+        drawerMenu.setGroupCheckable(R.id.langs_menu, true, true);
+        drawerMenu.findItem(path.hashCode()).setChecked(true).setEnabled(false);
+        Toast.makeText(this, "Loading "+name+"...", Toast.LENGTH_SHORT).show();
+        ConWord.lang = path;
+        binding.contentMain.toolbar.setTitle(name);
+        ConWord.alphabet = alphabet;
+        ConWord.ignored = ignored;
+        int fontface = R.font.liberation_serif_bold_italic;
+        if (ConWord.lang.equals("huoxinde-jazk")) // TODO update font acquisition
+            fontface = R.font.yu_martian_bold;
+        ConWord.clongTypeface = Typeface.create(
+                ResourcesCompat.getFont(MainActivity.this, fontface),
+                Typeface.NORMAL
+        );
+        // TODO reload fragment
+        this.getSupportFragmentManager().beginTransaction().setReorderingAllowed(true)
                 .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)
                 .addToBackStack("dict").commit();
-
     }
 
     @Override
@@ -236,6 +310,19 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_settings) {
+            Intent sett = new Intent(MainActivity.this,LangSettingsActivity.class);
+            startActivity(sett);
+            return true;
+        }
+        if (id == R.id.action_switch_language) {
+            Intent lang = new Intent(MainActivity.this, MainActivity2.class);
+            Bundle b0 = new Bundle();
+            for (String k :
+                    langs.keySet()) {
+                b0.putString(k,langs.get(k));
+            }
+            lang.putExtra("langMap",b0);
+            startActivity(lang);
             return true;
         }
         if (id == R.id.action_login) {
@@ -255,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_delete_entry) {
             TextView tv = findViewById(R.id.word_display);
             if (tv == null) return false;
-            db.collection("huoxinde-jazk") //TODO make var
+            db.collection(ConWord.lang) //TODO make var
                     .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -269,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
                                         @Override
                                         public void onClick(View v) {
                                             // This actually deletes the thing
-                                            db.collection("huoxinde-jazk") // TODO var
+                                            db.collection(ConWord.lang) // TODO var
                                                     .document(doc.getId()).delete()
                                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                         @Override
@@ -332,7 +419,7 @@ public class MainActivity extends AppCompatActivity {
                 e_map.put("part_of_speech",entry.getString("part_speech")); // TODO
                 e_map.put("definition",entry.getString("definition").toString());
                 e_map.put("etymology",entry.getString("etymology").toString());
-                db.collection("huoxinde-jazk") // TODO make variable
+                db.collection(ConWord.lang) // TODO make variable
                         .add(e_map).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {

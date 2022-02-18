@@ -55,7 +55,7 @@ public class FirstFragment extends Fragment {
         // elements are laid out.
         mLayoutManager = new LinearLayoutManager(getActivity());
         MainActivity a = (MainActivity) this.getActivity();
-        mAdapter = new DictAdapter(a.db,"huoxinde-jazk"); // TODO make not hardcoded
+        mAdapter = new DictAdapter(a.db,ConWord.lang); // TODO make not hardcoded
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(mLayoutManager);
         int pos;
@@ -83,68 +83,4 @@ public class FirstFragment extends Fragment {
         binding = null;
     }
 
-    /*
-    private void initDataset() {
-        mDataset = new DictEntry[DATASET_COUNT];
-        MainActivity a = (MainActivity) this.getActivity();
-        a.db.collection("huoxinde-jazk") // TODO make variable
-            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                int i = 0;
-                for (QueryDocumentSnapshot doc :
-                        task.getResult()) {
-                    DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("n"))
-                        pos = DictEntry.PartOfSpeech.NOUN;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("v"))
-                        pos = DictEntry.PartOfSpeech.VERB;
-                    if (((String)doc.getData().get("part_of_speech")).toLowerCase(Locale.ROOT).contains("par"))
-                        pos = DictEntry.PartOfSpeech.PARTICLE;
-                    if (i>DATASET_COUNT) break;
-                    mDataset[i] = new DictEntry((String) doc.getData().get("word"),
-                            (String) doc.getData().get("pronunciation"),
-                            pos,
-                            (String) doc.getData().get("definition"),
-                            (String) doc.getData().get("etymology")
-                    );
-                }
-            }
-        });
-        /*
-        // TODO get JSON from file not from text
-        // File jsonData = new File(this.getActivity().getFilesDir(),"lang.json");
-        jsonifiedDict = LingUtils.json;
-        JSONTokener tokener = new JSONTokener(jsonifiedDict);
-        int remaining = DATASET_COUNT;
-        try {
-            JSONArray jsonArray = (JSONArray) tokener.nextValue();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject entry = jsonArray.getJSONObject(i);
-                DictEntry.PartOfSpeech pos = DictEntry.PartOfSpeech.UNDEFINED;
-                if (entry.getString("part_speech").toLowerCase(Locale.ROOT).contains("n"))
-                    pos = DictEntry.PartOfSpeech.NOUN;
-                if (entry.getString("part_speech").toLowerCase(Locale.ROOT).contains("v"))
-                    pos = DictEntry.PartOfSpeech.VERB;
-                if (entry.getString("part_speech").toLowerCase(Locale.ROOT).contains("par"))
-                    pos = DictEntry.PartOfSpeech.PARTICLE;
-                mDataset[i] = new DictEntry(entry.getString("word"),
-                                            entry.getString("pronunciation"),
-                                            pos,
-                                            entry.getString("definition"),
-                                            entry.getString("etymology")
-                                            );
-                remaining--;
-                if (remaining <= 0) {
-                    break;
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }*-/
-        for (int i = 0; i < DATASET_COUNT; i++) {
-            mDataset[i] = new DictEntry("word","ipa", DictEntry.PartOfSpeech.UNDEFINED, "def", "etym");
-        }
-    }
-    */
 }

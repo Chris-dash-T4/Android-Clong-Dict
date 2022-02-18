@@ -1,5 +1,8 @@
 package edu.cmu.androidstuco.clongdict.data;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import edu.cmu.androidstuco.clongdict.data.model.LoggedInUser;
 
 /**
@@ -43,11 +46,13 @@ public class LoginRepository {
         // @see https://developer.android.com/training/articles/keystore
     }
 
-    public Result<LoggedInUser> login(String username, String password) {
+    public Result<FirebaseAuth> login(String username, String password) {
         // handle login
-        Result<LoggedInUser> result = dataSource.login(username, password);
+        Result<FirebaseAuth> result = dataSource.login(username, password);
         if (result instanceof Result.Success) {
-            setLoggedInUser(((Result.Success<LoggedInUser>) result).getData());
+            FirebaseUser fbUser = ((Result.Success<FirebaseAuth>) result).getData().getCurrentUser();
+            if (fbUser != null) setLoggedInUser(new LoggedInUser(fbUser.getUid(), fbUser.getDisplayName()));
+            else setLoggedInUser(new LoggedInUser(null,username));
         }
         return result;
     }

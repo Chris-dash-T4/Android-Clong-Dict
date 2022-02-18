@@ -18,7 +18,7 @@ import javax.security.auth.login.LoginException;
  */
 public class LoginDataSource {
 
-    public Result<LoggedInUser> login(String username, String password) {
+    public Result<FirebaseAuth> login(String username, String password) {
 
         try {
             FirebaseAuth auth = FirebaseAuth.getInstance();
@@ -40,7 +40,7 @@ public class LoginDataSource {
                         }
                     })*/;
             // TODO: handle loggedInUser authentication
-            return new Result.Success<>(fakeUser);
+            return new Result.Success<>(auth);
         } catch (Exception e) {
             return new Result.Error(new IOException("Error logging in", e));
         }

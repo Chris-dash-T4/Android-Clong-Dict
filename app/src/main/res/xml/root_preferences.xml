@@ -1,0 +1,43 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/messages_header">
+
+        <EditTextPreference
+            app:key="name"
+            app:title="Language Name"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:key="path"
+            app:title="Language Path Name (ASCII)"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="reply"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="uses-font"
+            app:summaryOff="Use default font for conlang text."
+            app:summaryOn="Use a custom font for conlang text."
+            app:title="Use Custom Font?" />
+
+        <SwitchPreferenceCompat
+            app:dependency="uses-font"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="Not yet implemented" />
+        <!-- TODO custom font support -->
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
