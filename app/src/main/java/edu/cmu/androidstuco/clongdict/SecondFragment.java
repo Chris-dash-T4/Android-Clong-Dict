@@ -49,14 +49,14 @@ public class SecondFragment extends Fragment {
         for (int i = 0; i < conwords.length; i+=2) {
             s0 += conwords[i];
         }
-        SpannableStringBuilder out = new SpannableStringBuilder(s0.replace("\\*",""));
+        SpannableStringBuilder out = new SpannableStringBuilder(s0.replace("*",""));
         String[] format = s0.split("\\*");
         int prev = 0;
         for (int i = 1; i < format.length; i+=2) {
             int a = prev+format[i-1].length();
             int b = a+format[i].length();
             out.setSpan(new StyleSpan(Typeface.ITALIC),a,b, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            prev += b;
+            prev = b;
         }
         prev = 0;
         for (int i = 1; i < conwords.length; i+=2) {
@@ -64,7 +64,7 @@ public class SecondFragment extends Fragment {
             int b = a+conwords[i].length();
             out.insert(a,conwords[i]);
             out.setSpan(new TypefaceSpan(ConWord.clongTypeface),a,b, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            prev += b;
+            prev = b;
         }
         return out;
     }
