@@ -74,7 +74,7 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(0x0108002b); //Plus symbol, ic_input_add
+        ((FloatingActionButton) this.getActivity().findViewById(R.id.fab)).setImageResource(android.R.drawable.ic_input_add);
     }
 
     @Override

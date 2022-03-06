@@ -70,27 +70,6 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                         else c0 = ((ContextWrapper)c0).getBaseContext();
                     }
 
-                    /** The following is from DictAdapter and does not work outside of MainActivity
-                    FragmentManager fm = a.getSupportFragmentManager();
-                    List<Fragment> fs = fm.getFragments();
-                    //if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
-
-                    // Put the entry data in a bundle to send to the viewing fragment
-                    Bundle b0 = new Bundle();
-                    b0.putString("word",wordView.getText().toString());
-                    b0.putString("pron",pronView.getText().toString());
-                    b0.putString("def" , defView.getText().toString());
-                    b0.putString("etym",etymView.getText().toString());
-                    SecondFragment snd = new SecondFragment();
-                    snd.setArguments(b0);
-                    FragmentTransaction txn = fm.beginTransaction();
-                    // allows for moving back to the list fragment w/o creating a new instance
-                    txn.setReorderingAllowed(true);
-                    txn.replace(R.id.fragment_container_view_tag,snd,null);
-                    ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
-                    txn.commit();
-                     */
-
                     Intent disp = new Intent(a,MainActivity.class);
                     disp.putExtra("display_mode",true);
                     disp.putExtra("word",wordView.getText().toString());
@@ -134,22 +113,6 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
      */
     public SearchResultAdapter(FirebaseFirestore db, String path, String query) {
         mDataSet = new ArrayList<>();
-        /*
-        final String[] langInfo = new String[2];
-        db.collection("languages").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                for (DocumentSnapshot doc :
-                        task.getResult()) {
-                    if (doc.get("path") == path) {
-                        langInfo[0] = (String) doc.get("alphabet");
-                        langInfo[1] = (String) doc.get("ignored");
-                    }
-                }
-                sortData(db, path, query, langInfo[0], langInfo[1]);
-            }
-        });
-        */
         db.collection(path).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
@@ -182,34 +145,6 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                             .replaceAll("["+ignored+"]","").indexOf(query) != -1)
                         mDataSet.add(e);
                 }
-                /*
-                Comparator<DictEntry> c = new Comparator<DictEntry>() {
-                    @Override
-                    public int compare(DictEntry e1, DictEntry e2) {
-                        if (e1 == null || e2 == null) throw new NullPointerException();
-                        // characters in ignored are explicitly removed from the counting
-                        char[] w1 = e1.getWord().replaceAll("["+ignored+"]", "").toCharArray();
-                        char[] w2 = e2.getWord().replaceAll("["+ignored+"]", "").toCharArray();
-                        int minLen = Math.min(w1.length, w2.length);
-                        for (int i = 0; i < minLen; i++) {
-                            if (alphabet.indexOf(w1[i]) < alphabet.indexOf(w2[i])) return -1;
-                            if (alphabet.indexOf(w1[i]) > alphabet.indexOf(w2[i])) return 1;
-                            // characters not in the alphabet and not ignored will be sorted by unicode value
-                            if (alphabet.indexOf(w1[i]) == -1) {
-                                if (Character.getNumericValue(w1[i]) < Character.getNumericValue(w2[i]))
-                                    return -1;
-                                if (Character.getNumericValue(w1[i]) > Character.getNumericValue(w2[i]))
-                                    return 1;
-                            }
-                            //@assert w1[i]===w2[i]
-                        }
-                        if (w1.length < w2.length) return -1;
-                        if (w1.length > w2.length) return 1;
-                        return 0;
-                    }
-                };
-                mDataSet.sort(c);
-                 */
                 // Refresh the View to show the newly-loaded entries
                 SearchResultAdapter.this.notifyDataSetChanged();
             }
@@ -223,6 +158,10 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
      */
     public SearchResultAdapter(String query) {
         //LingUtils.dataset; // can't send objects thru intents? no problem.
+        if (query==null) {
+            mDataSet = LingUtils.dataset;
+            return;
+        }
         mDataSet = new ArrayList<>();
         for (int i=0; i<LingUtils.dataset.size(); i++) {
             DictEntry e = LingUtils.dataset.get(i);

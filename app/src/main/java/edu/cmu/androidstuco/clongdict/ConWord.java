@@ -14,6 +14,7 @@ public class ConWord implements CharSequence {
     public static String lang = null; //"huoxinde-jazk"; // May change depending on defaults
     private String word;
     private CharSequence sortString;
+    private boolean refreshSorts = false;
 
     public ConWord(String s) {
         word=s;
@@ -21,7 +22,7 @@ public class ConWord implements CharSequence {
     }
 
     public CharSequence getSortString() {
-        if (sortString == null) {
+        if (sortString == null || refreshSorts) {
             StringBuilder s0 = new StringBuilder();
             if (alphabet == null) return null;
             for (char c : word.toCharArray()) {
@@ -31,6 +32,7 @@ public class ConWord implements CharSequence {
             }
             //compute sortString
             sortString = s0;
+            if (refreshSorts) refreshSorts = false;
         }
         return sortString;
     }
@@ -70,5 +72,9 @@ public class ConWord implements CharSequence {
     @Override
     public String toString() {
         return word;
+    }
+
+    public void updateAlphabet() {
+        refreshSorts = true;
     }
 }

@@ -92,6 +92,7 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void handleIntent(Intent intent) {
+        Toast.makeText(this,"bruh", Toast.LENGTH_SHORT).show();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             // Toast.makeText(this,"Query: "+query, Toast.LENGTH_LONG).show();

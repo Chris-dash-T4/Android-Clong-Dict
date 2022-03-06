@@ -43,6 +43,7 @@ import java.util.Locale;
  */
 public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
     private static final String TAG = "DictAdapter";
+    public static boolean resetAlph;
 
     private ArrayList<DictEntry> mDataSet;
 
@@ -96,7 +97,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
                     // allows for moving back to the list fragment w/o creating a new instance
                     txn.setReorderingAllowed(true);
                     txn.replace(R.id.fragment_container_view_tag,snd,null);
-                    ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
+                    ((FloatingActionButton) a.findViewById(R.id.fab)).setImageResource(android.R.drawable.ic_menu_edit);
                     txn.commit();
                 }
             });
@@ -180,6 +181,10 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
             @Override
             public int compare(DictEntry entry, DictEntry t1) {
                 try {
+                    if (resetAlph) {
+                        entry.getWord().updateAlphabet();
+                        t1.getWord().updateAlphabet();
+                    }
                     CharSequence xs = entry.getWord().getSortString();
                     CharSequence ys = t1.getWord().getSortString();
                     for (int i = 0; i < Math.min(xs.length(), ys.length()); i++) {
@@ -204,6 +209,7 @@ public class DictAdapter extends RecyclerView.Adapter<DictAdapter.ViewHolder> {
             }
         };
         mDataSet.sort(c0);
+        resetAlph = false;
     }
 
     // BEGIN_INCLUDE(recyclerViewOnCreateViewHolder)

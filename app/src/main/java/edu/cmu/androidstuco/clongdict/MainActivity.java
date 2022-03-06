@@ -181,12 +181,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-        /*
-        HashMap<String, Object> testLang = new HashMap<>();
-        testLang.put("Name", "Ol'ưnsih");
-        testLang.put("path","olunsih");
-        db.collection("languages").add(testLang);
-         */
 
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -225,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
             b0.putString("etym",getIntent().getStringExtra("etym"));
             SecondFragment snd = new SecondFragment();
             snd.setArguments(b0);
-            ((FloatingActionButton) findViewById(R.id.fab)).setImageResource(0x0108003e); // Pencil, ic_menu_edit
+            ((FloatingActionButton) findViewById(R.id.fab)).setImageResource(android.R.drawable.ic_menu_edit); // Pencil, ic_menu_edit
             fm.beginTransaction().setReorderingAllowed(true)
                 .replace(R.id.fragment_container_view_tag,snd,null)
                 .commit();
@@ -312,17 +306,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             Intent sett = new Intent(MainActivity.this,LangSettingsActivity.class);
             startActivity(sett);
-            return true;
-        }
-        if (id == R.id.action_switch_language) {
-            Intent lang = new Intent(MainActivity.this, MainActivity2.class);
-            Bundle b0 = new Bundle();
-            for (String k :
-                    langs.keySet()) {
-                b0.putString(k,langs.get(k));
-            }
-            lang.putExtra("langMap",b0);
-            startActivity(lang);
             return true;
         }
         if (id == R.id.action_login) {

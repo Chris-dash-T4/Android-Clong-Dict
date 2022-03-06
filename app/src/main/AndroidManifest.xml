@@ -10,11 +10,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ClongDict">
         <activity
-            android:name=".MainActivity2"
-            android:exported="false"
-            android:label="@string/title_activity_main2"
-            android:theme="@style/Theme.ClongDict.NoActionBar" />
-        <activity
             android:name=".LangSettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_lang_settings" />
