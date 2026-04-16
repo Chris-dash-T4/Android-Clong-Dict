@@ -66,7 +66,7 @@ public class LangSettingsActivity extends AppCompatActivity {
                             !ConWord.ignored.equals(l_map.get("ignored"))) {
                             ConWord.alphabet = (String) l_map.get("alphabet");
                             ConWord.ignored = (String) l_map.get("ignored");
-                            DictAdapter.resetAlph = true;
+                            LingUtils.resetAlph = true;
                         }
                         Intent i0 = new Intent(LangSettingsActivity.this, MainActivity.class);
                         startActivity(i0);

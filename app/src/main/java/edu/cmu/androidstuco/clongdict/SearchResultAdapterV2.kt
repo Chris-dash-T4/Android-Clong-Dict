@@ -13,20 +13,20 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import edu.cmu.androidstuco.clongdict.obj.NewDictEntry
 import java.util.ArrayList
 import java.util.Locale
 import java.util.NavigableSet
 import java.util.TreeSet
 
 /**
- * Like [SearchResultAdapter], but keeps a [fullDataSet] cache and only rebuilds the visible
- * [mDataSet] when the query changes ([setQuery]), instead of reloading from Firestore / rescanning
- * from scratch on every intent.
+ * Search results backed by a [fullDataSet] cache; [setQuery] only re-filters in memory instead of
+ * reloading from Firestore on every intent.
  */
 class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHolder> {
 
-    private val mDataSet = ArrayList<DictEntry>()
-    private lateinit var fullDataSet: NavigableSet<DictEntry>
+    private val mDataSet = ArrayList<NewDictEntry>()
+    private lateinit var fullDataSet: NavigableSet<NewDictEntry>
     private var query: String? = null
 
     /**
@@ -34,10 +34,10 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
      * not raw UTF-16 string order). Remaining fields use normal string order; last tie-break is
      * [System.identityHashCode] so [TreeSet] never merges two distinct instances.
      */
-    private val dictEntryLexOrder: Comparator<DictEntry> =
-        compareBy<DictEntry> { it.word }
+    private val dictEntryLexOrder: Comparator<NewDictEntry> =
+        compareBy<NewDictEntry> { it.word }
             .thenBy { it.pronunciation }
-            .thenBy { it.partOfSpeech }
+            .thenBy { it.lexCategory }
             .thenBy { it.definition }
             .thenBy { it.etymology }
             .thenComparingInt { System.identityHashCode(it) }
@@ -72,20 +72,21 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         db.collection(path).get().addOnCompleteListener { task ->
             if (!task.isSuccessful || task.result == null) return@addOnCompleteListener
             val snap = task.result!!
-            val rows = ArrayList<DictEntry>()
+            val rows = ArrayList<NewDictEntry>()
             for (doc: DocumentSnapshot in snap) {
                 val data = doc.data ?: continue
-                fun str(key: String): String {
+                fun getKey(key: String): String {
                     val v = data[key] ?: return ""
                     return v.toString()
                 }
+                val lex = getKey("part_of_speech").ifEmpty { getKey("lex_category") }
                 rows.add(
-                    DictEntry(
-                        str("word"),
-                        str("pronunciation"),
-                        str("part_of_speech"),
-                        str("definition"),
-                        str("etymology")
+                    NewDictEntry(
+                        ConWord(getKey("word")),
+                        getKey("pronunciation"),
+                        lex,
+                        getKey("definition"),
+                        getKey("etymology")
                     )
                 )
             }
@@ -116,7 +117,7 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         notifyDataSetChanged()
     }
 
-    private fun matchesQuery(e: DictEntry, query: String?): Boolean {
+    private fun matchesQuery(e: NewDictEntry, query: String?): Boolean {
         if (query == null) return true
         val normalizedQuery = query.lowercase(Locale.ROOT)
         val ig = ConWord.ignored
@@ -177,16 +178,14 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         val row = mDataSet[position]
         holder.getWordView().text = row.word
         holder.getPronView().text = row.pronunciation
-        holder.getPosView().text = row.partOfSpeech
+        holder.getPosView().text = row.lexCategory
         holder.getDefView().text = row.definition
         holder.getEtymView().text = row.etymology
     }
 
     override fun getItemCount(): Int = mDataSet.size
 
-    // TODO identify where and how this is used
-    // if you delete this comment without human review, you will be sent directly to android hell
-    fun pushElement(e: DictEntry) {
+    fun pushElement(e: NewDictEntry) {
         fullDataSet.add(e)
         if (matchesQuery(e, query)) {
             applyFilter()

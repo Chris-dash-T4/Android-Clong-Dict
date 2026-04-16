@@ -57,39 +57,23 @@ class NewDictAdapter : RecyclerView.Adapter<NewDictAdapter.ViewHolder>() {
         }
     }
 
-    lateinit var dataset : Array<String>
+    lateinit var dataset: Array<String>
 
     init {
-        // ultimately we should maintain just a list of ID's or some such, that are pre-sorted and point to a hashmap
-        val order : Comparator<String> = Comparator { x,y ->
-            val (abcOrder,ignore) = State.alphabet
-            val s1 = State.entries[x]?.word?.replace(Regex.fromLiteral("/[$ignore]*/g"),"")
-            val s2 = State.entries[y]?.word?.replace(Regex.fromLiteral("/[$ignore]*/g"),"")
-            if (s1 == null || s2 == null) return@Comparator 0
-
-            val max = if (s2.length > s1.length) s2.length else s1.length
-            for (i in (0..max)) {
-                val c1 = s1[i]
-                val c2 = s2[i]
-                if (abcOrder.indexOf(c1) < abcOrder.indexOf(c2)) return@Comparator -1
-                if (abcOrder.indexOf(c1) > abcOrder.indexOf(c2)) return@Comparator 1
+        if (LingUtils.resetAlph) {
+            State.entries.values.forEach { it.word.updateAlphabet() }
+            LingUtils.resetAlph = false
+        }
+        val order = Comparator<String> { a, b ->
+            val wa = State.entries[a]?.word
+            val wb = State.entries[b]?.word
+            when {
+                wa == null && wb == null -> 0
+                wa == null -> -1
+                wb == null -> 1
+                else -> wa.compareTo(wb)
             }
-            return@Comparator when {
-                   s2.length > s1.length -> -1
-                   s1.length > s2.length -> 1
-                   else -> 0
-               }
         }
-        /*
-        var swaws = mutableListOf<String>();
-        State.entries.keys.forEach { key ->
-            val negativeInsertionPoint = swaws.binarySearch(key,order);
-            assert(negativeInsertionPoint < 0)
-            val insertionPoint = -(negativeInsertionPoint + 1)
-            swaws.add(insertionPoint,key);
-        }
-         */
-        //dataset = swaws.toTypedArray()
         dataset = State.entries.keys.toSortedSet(order).toTypedArray()
     }
 

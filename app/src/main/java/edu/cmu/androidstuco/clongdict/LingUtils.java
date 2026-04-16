@@ -2,13 +2,14 @@ package edu.cmu.androidstuco.clongdict;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
-/**
- * This class is not currently in use anywhere, but may be implemented later for data parsing, exports, etc.
- */
+import edu.cmu.androidstuco.clongdict.obj.NewDictEntry;
+
+/** Shared dictionary rows for search and phoneme helpers. */
 public class LingUtils {
-    public static ArrayList<DictEntry> dataset;
+    public static ArrayList<NewDictEntry> dataset;
+    /** When true, ConWord sort keys are refreshed on the next dictionary list build. */
+    public static boolean resetAlph = false;
     public static HashMap<Character,Character> phoneConverter;
 
     public static void initPhonemeConverter() {
@@ -18,7 +19,7 @@ public class LingUtils {
         };
         for (char[] pair :
                 conversions) {
-            phoneConverter.put(new Character(pair[0]),new Character(pair[1]));
+            phoneConverter.put(pair[0], pair[1]);
         }
     }
 
