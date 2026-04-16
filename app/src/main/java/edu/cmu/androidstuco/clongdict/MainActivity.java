@@ -1,6 +1,7 @@
 package edu.cmu.androidstuco.clongdict;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -68,6 +69,14 @@ public class MainActivity extends AppCompatActivity {
 
     // I may hold on to this for future use
     private AppBarConfiguration appBarConfiguration;
+
+    private static Typeface clongUiTypeface(Context context) {
+        Typeface base = ResourcesCompat.getFont(context, R.font.noto_sans_clong);
+        if (base != null) {
+            return Typeface.create(base, Typeface.NORMAL);
+        }
+        return Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+    }
 
     @SuppressLint("ResourceType")
     @Override
@@ -161,13 +170,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (ConWord.lang != null && ConWord.lang.equals((String) document.getData().get("path"))) {
                                     ConWord.alphabet = (CharSequence) document.getData().get("alphabet");
                                     ConWord.ignored = (CharSequence) document.getData().get("ignored");
-                                    int fontface = R.font.liberation_serif_bold_italic;
-                                    if (ConWord.lang.equals("huoxinde-jazk"))
-                                        fontface = R.font.yu_martian_bold;
-                                    ConWord.clongTypeface = Typeface.create(
-                                            ResourcesCompat.getFont(MainActivity.this, fontface),
-                                            Typeface.NORMAL
-                                    );
+                                    ConWord.clongTypeface = clongUiTypeface(MainActivity.this);
                                     drawer.findItem(((String) document.getData().get("path")).hashCode()).setChecked(true).setEnabled(false);
                                 }
                                 i++;
@@ -248,13 +251,7 @@ public class MainActivity extends AppCompatActivity {
         binding.contentMain.toolbar.setTitle(name);
         ConWord.alphabet = alphabet;
         ConWord.ignored = ignored;
-        int fontface = R.font.liberation_serif_bold_italic;
-        if (ConWord.lang.equals("huoxinde-jazk")) // TODO update font acquisition
-            fontface = R.font.yu_martian_bold;
-        ConWord.clongTypeface = Typeface.create(
-                ResourcesCompat.getFont(MainActivity.this, fontface),
-                Typeface.NORMAL
-        );
+        ConWord.clongTypeface = clongUiTypeface(MainActivity.this);
         // TODO reload fragment
         this.getSupportFragmentManager().beginTransaction().setReorderingAllowed(true)
                 .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)

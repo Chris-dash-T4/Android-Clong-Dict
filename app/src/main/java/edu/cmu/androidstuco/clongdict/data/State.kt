@@ -31,12 +31,12 @@ data class State(val dataSource: FirebaseFirestore, val context: Context) {
                         // TODO re-integrate with drawer and other such
                         if (language == document.data["language"]) {
                             alphabet = Pair(document.data["alphabet"]!! as CharSequence, document.data["ignored"]!! as CharSequence)
-                            var fontFamily: Int = R.font.liberation_serif_bold_italic
-                            if (language == "huoxinde-jazk") fontFamily = R.font.yu_martian_bold
-                            typeface = Typeface.create(
-                                    ResourcesCompat.getFont(context, fontFamily),
-                                    Typeface.NORMAL
-                            )
+                            val base = ResourcesCompat.getFont(context, R.font.noto_sans_clong)
+                            typeface = if (base != null) {
+                                Typeface.create(base, Typeface.NORMAL)
+                            } else {
+                                Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+                            }
                         }
                     }
                     initialized = true

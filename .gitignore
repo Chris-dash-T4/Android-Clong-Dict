@@ -1,4 +1,6 @@
 *.iml
+# Local / WIP Clong font (often symlinked); add to repo when stable
+app/src/main/res/font/noto_sans_clong.ttf
 .gradle
 /local.properties
 /.idea/caches

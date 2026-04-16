@@ -1,5 +1,6 @@
 package edu.cmu.androidstuco.clongdict;
 
+import android.app.SearchableInfo;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -20,15 +21,18 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivitySearchBinding;
 
 public class SearchActivity extends AppCompatActivity {
 
+    // tf is this for
     private static final String JARGON = "gnuershk";
+
     private ActivitySearchBinding binding;
     protected RecyclerView.LayoutManager srLayoutManager;
-    protected SearchResultAdapter srAdapter;
+    protected SearchResultAdapterV2 srAdapter;
     private SearchManager mgr;
     private SearchView sView;
     private RecyclerView rView;
@@ -54,24 +58,36 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
 
-        rView = (RecyclerView) findViewById(R.id.recView2);
-        Intent intent = getIntent();
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            handleIntent(intent);
-            //doMySearch(query);
-        }
+        rView = findViewById(R.id.recView2);
         srLayoutManager = new LinearLayoutManager(this);
         rView.setLayoutManager(srLayoutManager);
 
+        Intent intent = getIntent();
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            handleIntent(intent);
+        }
+
         mgr = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        sView = (SearchView) findViewById(R.id.search_bar);
-        sView.setSearchableInfo(mgr.getSearchableInfo(getComponentName()));
+        // Use view binding: activity findViewById can miss views nested under Toolbar here.
+        sView = binding.searchBar;
+        if (mgr != null) {
+            SearchableInfo si = mgr.getSearchableInfo(getComponentName());
+            if (si != null) {
+                try {
+                    sView.setSearchableInfo(si);
+                } catch (RuntimeException ignored) {
+                    // AppCompat SearchView + searchable metadata can throw on some configs;
+                    // OnQueryTextListener + handleIntent still drive search.
+                }
+            }
+        }
         sView.setIconifiedByDefault(false);
         sView.setSubmitButtonEnabled(true);
         sView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 Intent i1 = (Intent) SearchActivity.this.getIntent().clone();
+                i1.setAction(Intent.ACTION_SEARCH);
                 i1.putExtra(SearchManager.QUERY, query);
                 SearchActivity.this.onNewIntent(i1);
                 return true;
@@ -79,7 +95,7 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return false; //onQueryTextSubmit(newText);
+                return false;
             }
         });
     }
@@ -95,11 +111,25 @@ public class SearchActivity extends AppCompatActivity {
         Toast.makeText(this,"bruh", Toast.LENGTH_SHORT).show();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            // Toast.makeText(this,"Query: "+query, Toast.LENGTH_LONG).show();
-            srAdapter = new SearchResultAdapter(/*FirebaseFirestore.getInstance(),
-                    "huoxinde-jazk", // TODO you know the thing*/
-                    query==null?null:query.toLowerCase(Locale.ROOT));
-            rView.setAdapter(srAdapter);
+            String qNorm = query == null ? null : query.toLowerCase(Locale.ROOT);
+            String langPath = ConWord.lang;
+            boolean pathChanged = srAdapter == null
+                    || !Objects.equals(langPath, srAdapter.getBackingCollectionPath());
+            if (pathChanged) {
+                if (langPath != null) {
+                    //Toast.makeText(this,"langPath: "+langPath, Toast.LENGTH_SHORT).show();
+                    srAdapter = new SearchResultAdapterV2(
+                            FirebaseFirestore.getInstance(),
+                            langPath,
+                            qNorm);
+                    //Toast.makeText(this,"srAdapter created successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    srAdapter = new SearchResultAdapterV2(qNorm);
+                }
+                rView.setAdapter(srAdapter);
+            } else {
+                srAdapter.setQuery(qNorm);
+            }
         }
     }
 
@@ -109,7 +139,9 @@ public class SearchActivity extends AppCompatActivity {
         Toast.makeText(this,"bruh", Toast.LENGTH_LONG).show();
         Bundle appData = new Bundle();
         appData.putBoolean(SearchActivity.JARGON, true);
-        String q0 = (String) sView.getQuery();
+        // SearchView#getQuery() is CharSequence (often Editable), not String — casting throws ClassCastException.
+        CharSequence qSeq = sView.getQuery();
+        String q0 = qSeq != null ? qSeq.toString() : null;
         startSearch(q0, false, appData, false);
         return super.onSearchRequested();
     }
