@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,12 +19,21 @@ import java.util.ArrayList
 import java.util.Locale
 import java.util.NavigableSet
 import java.util.TreeSet
+import java.util.concurrent.Executors
 
 /**
  * Search results backed by a [fullDataSet] cache; [setQuery] only re-filters in memory instead of
- * reloading from Firestore on every intent.
+ * reloading from Firestore on every intent. Filtering runs on a background thread so the UI
+ * thread stays responsive while typing.
  */
 class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHolder> {
+
+    companion object {
+        private val filterExecutor = Executors.newSingleThreadExecutor { r ->
+            Thread(r, "clong-dict-search-filter").apply { isDaemon = true }
+        }
+        private val mainHandler = Handler(Looper.getMainLooper())
+    }
 
     private val mDataSet = ArrayList<NewDictEntry>()
     private lateinit var fullDataSet: NavigableSet<NewDictEntry>
@@ -58,7 +68,7 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         fullDataSet = TreeSet(dictEntryLexOrder)
         LingUtils.dataset?.let { fullDataSet.addAll(it) }
         this.query = query
-        applyFilter()
+        applyFilterSync()
     }
 
     /**
@@ -68,7 +78,6 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         backingCollectionPath = path
         this.query = query
         fullDataSet = TreeSet(dictEntryLexOrder)
-        val mainHandler = Handler(Looper.getMainLooper())
         db.collection(path).get().addOnCompleteListener { task ->
             if (!task.isSuccessful || task.result == null) return@addOnCompleteListener
             val snap = task.result!!
@@ -93,28 +102,50 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
             mainHandler.post {
                 fullDataSet.clear()
                 fullDataSet.addAll(rows)
-                applyFilter()
+                scheduleFilterAsync(this@SearchResultAdapterV2.query)
             }
         }
     }
 
     /**
      * Update the search string and re-filter from [fullDataSet] only (no Firestore / full rescan).
+     * Work is done off the UI thread; [notifyDataSetChanged] runs on the main thread.
      */
     fun setQuery(query: String?) {
         this.query = query
-        applyFilter()
+        scheduleFilterAsync(query)
     }
 
-    private fun applyFilter() {
-        mDataSet.clear()
-        val q = query
-        for (e in fullDataSet) {
-            if (matchesQuery(e, q)) {
-                mDataSet.add(e)
+    /**
+     * Snapshot [fullDataSet] on the calling thread, compute matches on [filterExecutor], then apply
+     * on the main thread only if [jobQuery] is still the active [query] (drops stale completions).
+     */
+    private fun scheduleFilterAsync(jobQuery: String?) {
+        val snapshot = ArrayList(fullDataSet)
+        filterExecutor.execute {
+            val out = computeMatches(snapshot, jobQuery)
+            mainHandler.post {
+                if (jobQuery != this@SearchResultAdapterV2.query) return@post
+                mDataSet.clear()
+                mDataSet.addAll(out)
+                notifyDataSetChanged()
             }
         }
+    }
+
+    /** Synchronous filter for small in-memory init paths (runs on caller thread). */
+    private fun applyFilterSync() {
+        mDataSet.clear()
+        mDataSet.addAll(computeMatches(fullDataSet, query))
         notifyDataSetChanged()
+    }
+
+    private fun computeMatches(source: Iterable<NewDictEntry>, q: String?): ArrayList<NewDictEntry> {
+        val out = ArrayList<NewDictEntry>()
+        for (e in source) {
+            if (matchesQuery(e, q)) out.add(e)
+        }
+        return out
     }
 
     private fun matchesQuery(e: NewDictEntry, query: String?): Boolean {
@@ -187,8 +218,7 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
 
     fun pushElement(e: NewDictEntry) {
         fullDataSet.add(e)
-        if (matchesQuery(e, query)) {
-            applyFilter()
-        }
+        if (!matchesQuery(e, query)) return
+        scheduleFilterAsync(query)
     }
 }

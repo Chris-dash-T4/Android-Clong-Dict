@@ -36,6 +36,8 @@ public class SearchActivity extends AppCompatActivity {
     private SearchManager mgr;
     private SearchView sView;
     private RecyclerView rView;
+    /** Last query passed to the adapter (normalized); used because getQuery() already matches newText in onQueryTextChange. */
+    private String lastHandledNormalizedQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +97,15 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return false;
+                String qNorm = newText == null ? null : newText.toLowerCase(Locale.ROOT);
+                if (qNorm != null && qNorm.equals(lastHandledNormalizedQuery)) {
+                    return false;
+                }
+                Intent i1 = (Intent) SearchActivity.this.getIntent().clone();
+                i1.setAction(Intent.ACTION_SEARCH);
+                i1.putExtra(SearchManager.QUERY, newText);
+                SearchActivity.this.onNewIntent(i1);
+                return true;
             }
         });
     }
@@ -108,7 +118,6 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void handleIntent(Intent intent) {
-        Toast.makeText(this,"bruh", Toast.LENGTH_SHORT).show();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             String qNorm = query == null ? null : query.toLowerCase(Locale.ROOT);
@@ -116,6 +125,7 @@ public class SearchActivity extends AppCompatActivity {
             boolean pathChanged = srAdapter == null
                     || !Objects.equals(langPath, srAdapter.getBackingCollectionPath());
             if (pathChanged) {
+                Toast.makeText(this,"Loading "+langPath+"...", Toast.LENGTH_SHORT).show();
                 if (langPath != null) {
                     //Toast.makeText(this,"langPath: "+langPath, Toast.LENGTH_SHORT).show();
                     srAdapter = new SearchResultAdapterV2(
@@ -130,13 +140,13 @@ public class SearchActivity extends AppCompatActivity {
             } else {
                 srAdapter.setQuery(qNorm);
             }
+            lastHandledNormalizedQuery = qNorm;
         }
     }
 
     @Override
     public boolean onSearchRequested() {
         //pauseSomeStuff();
-        Toast.makeText(this,"bruh", Toast.LENGTH_LONG).show();
         Bundle appData = new Bundle();
         appData.putBoolean(SearchActivity.JARGON, true);
         // SearchView#getQuery() is CharSequence (often Editable), not String — casting throws ClassCastException.
