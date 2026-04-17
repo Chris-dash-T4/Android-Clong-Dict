@@ -70,6 +70,55 @@ public class MainActivity extends AppCompatActivity {
     // I may hold on to this for future use
     private AppBarConfiguration appBarConfiguration;
 
+    // I LOVE JAVA!!! I LOVE MAKING ENTIRE CLASSES FOR WHAT COULD HAVE BEEN A LAMBDA!!!
+    // -- ^ this message has been approved by the Functions Are Values committee
+    private OnCompleteListener<QuerySnapshot> deletionListener = new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                for (QueryDocumentSnapshot doc :
+                        task.getResult()) {
+                    if (doc.getData().get("word").equals(tv.getText().toString())) {
+                        Snackbar.make(MainActivity.this.findViewById(R.id.fragment_container_view_tag),
+                                "Deletion is irreversable, do you want to delete «"+doc.getData().get("word")+"»?",
+                                Snackbar.LENGTH_LONG)
+                                .setAction("CONFIRM", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        // This actually deletes the thing
+                                        db.collection(ConWord.lang) // TODO var
+                                                .document(doc.getId()).delete()
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void unused) {
+                                                        getSupportFragmentManager().beginTransaction()
+                                                                .replace(R.id.fragment_container_view_tag,
+                                                                        FirstFragment.class,
+                                                                        null)
+                                                                .commit();
+                                                        Snackbar.make(MainActivity.this
+                                                                        .findViewById(R.id.fragment_container_view_tag),
+                                                                "Deletion Successful.", Snackbar.LENGTH_SHORT)
+                                                                .show();
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Snackbar.make(MainActivity.this
+                                                                        .findViewById(R.id.fragment_container_view_tag),
+                                                                "Deletion Failed.", Snackbar.LENGTH_SHORT)
+                                                                .show();
+                                                    }
+                                                });
+                                    }
+                                })
+                                .setActionTextColor(0xc0ff0000)
+                                .show();
+                    }
+                }
+            }
+        };
+
     private static Typeface clongUiTypeface(Context context) {
         Typeface base = ResourcesCompat.getFont(context, R.font.noto_sans_clong);
         if (base != null) {
@@ -294,82 +343,46 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_search) {
+        switch (id) {
+        case R.id.action_search:
+            if (ConWord.lang == null) {
+                Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+                return false;
+            }
             Intent i_s = new Intent(MainActivity.this, SearchActivity.class);
             i_s.setAction(Intent.ACTION_SEARCH);
             startActivity(i_s);
             return true;
-        }
-        if (id == R.id.action_settings) {
-            Intent sett = new Intent(MainActivity.this,LangSettingsActivity.class);
+
+        case R.id.action_settings:
+            Intent sett = new Intent(MainActivity.this, LangSettingsActivity.class);
             startActivity(sett);
             return true;
-        }
-        if (id == R.id.action_login) {
+
+        case R.id.action_login:
             mAuth.signOut();
             Intent lo = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(lo);
             return true;
-        }
-        if (id == R.id.action_upload) {
+
+        case R.id.action_upload:
             Intent sel = new Intent(Intent.ACTION_GET_CONTENT);
             sel.addCategory(Intent.CATEGORY_OPENABLE);
             sel.setType("*/*");
-            Intent i_s = Intent.createChooser(sel, "Press start to introduce new project");
-            startActivityForResult(i_s, 2);
+            Intent chooser = Intent.createChooser(sel, "Press start to introduce new project");
+            startActivityForResult(chooser, 2);
             return true;
-        }
-        if (id == R.id.action_delete_entry) {
+
+        case R.id.action_delete_entry:
             TextView tv = findViewById(R.id.word_display);
             if (tv == null) return false;
-            db.collection(ConWord.lang) //TODO make var
-                    .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    for (QueryDocumentSnapshot doc :
-                            task.getResult()) {
-                        if (doc.getData().get("word").equals(tv.getText().toString())) {
-                            Snackbar.make(MainActivity.this.findViewById(R.id.fragment_container_view_tag),
-                                    "Deletion is irreversable, do you want to delete «"+doc.getData().get("word")+"»?",
-                                    Snackbar.LENGTH_LONG)
-                                    .setAction("CONFIRM", new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            // This actually deletes the thing
-                                            db.collection(ConWord.lang) // TODO var
-                                                    .document(doc.getId()).delete()
-                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                        @Override
-                                                        public void onSuccess(Void unused) {
-                                                            getSupportFragmentManager().beginTransaction()
-                                                                    .replace(R.id.fragment_container_view_tag,
-                                                                            FirstFragment.class,
-                                                                            null)
-                                                                    .commit();
-                                                            Snackbar.make(MainActivity.this
-                                                                            .findViewById(R.id.fragment_container_view_tag),
-                                                                    "Deletion Successful.", Snackbar.LENGTH_SHORT)
-                                                                    .show();
-                                                        }
-                                                    })
-                                                    .addOnFailureListener(new OnFailureListener() {
-                                                        @Override
-                                                        public void onFailure(@NonNull Exception e) {
-                                                            Snackbar.make(MainActivity.this
-                                                                            .findViewById(R.id.fragment_container_view_tag),
-                                                                    "Deletion Failed.", Snackbar.LENGTH_SHORT)
-                                                                    .show();
-                                                        }
-                                                    });
-                                        }
-                                    })
-                                    .setActionTextColor(0xc0ff0000)
-                                    .show();
-                        }
-                    }
-                }
-            });
+            // if you manage to get this far without a language selected, you're on your own
+            assert ConWord.lang != null;
+            db.collection(ConWord.lang)
+                    .get().addOnCompleteListener(deletionListener);
+            break;
         }
+
 
         return super.onOptionsItemSelected(item);
     }
