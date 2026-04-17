@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.function.Function;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     // I LOVE JAVA!!! I LOVE MAKING ENTIRE CLASSES FOR WHAT COULD HAVE BEEN A LAMBDA!!!
     // -- ^ this message has been approved by the Functions Are Values committee
-    private OnCompleteListener<QuerySnapshot> deletionListener = new OnCompleteListener<QuerySnapshot>() {
+    private Function<TextView, OnCompleteListener<QuerySnapshot>> deletionListener = tv -> new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 for (QueryDocumentSnapshot doc :
@@ -379,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
             // if you manage to get this far without a language selected, you're on your own
             assert ConWord.lang != null;
             db.collection(ConWord.lang)
-                    .get().addOnCompleteListener(deletionListener);
+                    .get().addOnCompleteListener(deletionListener.apply(tv));
             break;
         }
 
