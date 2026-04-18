@@ -297,6 +297,7 @@ public class MainActivity extends AppCompatActivity {
         drawerMenu.setGroupCheckable(R.id.langs_menu, true, true);
         drawerMenu.findItem(path.hashCode()).setChecked(true).setEnabled(false);
         Toast.makeText(this, "Loading "+name+"...", Toast.LENGTH_SHORT).show();
+        ConWord.destroyEngine();
         ConWord.lang = path;
         binding.contentMain.toolbar.setTitle(name);
         ConWord.alphabet = alphabet;

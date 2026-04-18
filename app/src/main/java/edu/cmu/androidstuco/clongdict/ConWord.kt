@@ -1,8 +1,11 @@
 package edu.cmu.androidstuco.clongdict
 
+import android.content.Context
 import android.graphics.Typeface
 import java.lang.StringBuilder
 import java.util.stream.IntStream
+
+import edu.cmu.androidstuco.clongdict.rust.ClongImeNative
 
 class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
     private var sortString: CharSequence? = null
@@ -84,5 +87,33 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
         var clongTypeface: Typeface? = null
         @JvmField
         var lang: String? = null //"huoxinde-jazk"; // May change depending on defaults
+
+        /**
+         * Asset path under `assets/` for the IME TOML schema (e.g. `hxj.toml`).
+         * Change before [createEngine] when switching conlangs; call [destroyEngine] first if replacing an existing engine.
+         */
+        @JvmField
+        var imeSchemaAsset: String = "hxj.toml"
+
+        /** 0 = no engine or failed init. Use from Java as `ConWord.engineHandle == 0`. */
+        @JvmField
+        var engineHandle: Long = 0
+
+        /** Release the native schema/engine (e.g. before loading a different [imeSchemaAsset] or after a failed init). */
+        @JvmStatic
+        fun destroyEngine() {
+            if (engineHandle != 0L) {
+                ClongImeNative.nativeEngineDestroy(engineHandle)
+                engineHandle = 0L
+            }
+        }
+
+        /** Loads [imeSchemaAsset] from [Context.getAssets] and creates the native engine. */
+        @JvmStatic
+        fun createEngine(context: Context) {
+            if (engineHandle != 0L) return
+            val schemaToml = context.assets.open(imeSchemaAsset).bufferedReader().use { it.readText() }
+            engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
+        }
     }
 }

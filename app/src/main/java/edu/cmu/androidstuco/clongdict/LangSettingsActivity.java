@@ -61,7 +61,10 @@ public class LangSettingsActivity extends AppCompatActivity {
                         .set(l_map).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
-                        if (!ConWord.lang.equals(l_map.get("path"))) ConWord.lang=(String) l_map.get("path");
+                        if (!ConWord.lang.equals(l_map.get("path"))) {
+                            ConWord.destroyEngine();
+                            ConWord.lang = (String) l_map.get("path");
+                        }
                         if (!ConWord.alphabet.equals(l_map.get("alphabet")) ||
                             !ConWord.ignored.equals(l_map.get("ignored"))) {
                             ConWord.alphabet = (String) l_map.get("alphabet");

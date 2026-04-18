@@ -27,6 +27,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.google.android.material.snackbar.Snackbar;
 
 import edu.cmu.androidstuco.clongdict.databinding.FragmentSecondBinding;
+import edu.cmu.androidstuco.clongdict.rust.ClongImeNative;
 
 public class SecondFragment extends Fragment {
 
@@ -69,12 +70,31 @@ public class SecondFragment extends Fragment {
         return out;
     }
 
+    private String showWord(String word) {
+        if (word == null) {
+            Toast.makeText(requireActivity(), "word is null", Toast.LENGTH_SHORT).show();
+            return "";
+        }
+        if (ConWord.engineHandle == 0) {
+            ConWord.createEngine(requireActivity().getApplicationContext());
+        }
+        if (ConWord.engineHandle == 0) {
+            Toast.makeText(requireActivity(), "engine handle creation failed", Toast.LENGTH_SHORT).show();
+            return word;
+        }
+        String rendered = ClongImeNative.nativeRender(ConWord.engineHandle, word, "font") + " (" + word + ")";
+        if (rendered == null) {
+            Toast.makeText(requireActivity(), "rendered is null", Toast.LENGTH_SHORT).show();
+        }
+        return rendered != null ? rendered : word;
+    }
+
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         Bundle args = this.getArguments();
         if (args != null) {
-            binding.wordDisplay.setText(args.getString("word"));
+            binding.wordDisplay.setText(showWord(args.getString("word")));
             binding.wordDisplay.setTypeface(ConWord.clongTypeface);
             binding.pronunciation.setText(args.getString("pron"));
             binding.partOfSpeech.setText(args.getString("lexcat"));
