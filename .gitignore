@@ -15,3 +15,6 @@ app/src/main/res/font/noto_sans_clong.ttf
 .externalNativeBuild
 .cxx
 local.properties
+# Built by `cargo ndk` (see app/build.gradle); commit .so files if CI cannot compile Rust
+app/src/main/jniLibs/**/*.so
+rust/**/target/
