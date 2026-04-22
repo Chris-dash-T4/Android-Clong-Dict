@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_insert_ipa_at_cursor"
+        android:title="@string/pronunciation_menu_insert_cursor" />
+    <item
+        android:id="@+id/menu_append_ipa"
+        android:title="@string/pronunciation_menu_append" />
+</menu>

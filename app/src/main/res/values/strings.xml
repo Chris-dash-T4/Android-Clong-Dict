@@ -138,4 +138,18 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+
+    <string name="pronunciation_baseline_caption">Engine IPA from headword: %1$s</string>
+    <string name="pronunciation_deviation_hint">Your IPA (normalized) — highlights differ from the engine line above. Tap Use IPA to fill the field; long-press Use IPA to insert at the cursor or append.</string>
+    <string name="pronunciation_matches_suggestion">Matches engine suggestion.</string>
+    <string name="pronunciation_enter_to_compare">Type IPA above to see differences from the engine suggestion.</string>
+    <string name="pronunciation_auto_ipa">Auto IPA</string>
+    <string name="pronunciation_auto_ipa_content_description">Fill or refresh IPA from headword using the schema engine</string>
+    <string name="pronunciation_engine_error_generic">Could not compute IPA (engine not loaded or invalid headword).</string>
+    <string name="pronunciation_need_headword">Enter a headword before using Auto IPA.</string>
+    <string name="pronunciation_use_ipa">Use IPA</string>
+    <string name="pronunciation_use_ipa_content_description">Copy the engine IPA into the pronunciation field</string>
+    <string name="pronunciation_menu_insert_cursor">Insert at cursor / replace selection</string>
+    <string name="pronunciation_menu_append">Append at end</string>
+    <string name="pronunciation_need_auto_first">Run Auto IPA first to generate a suggestion.</string>
 </resources>

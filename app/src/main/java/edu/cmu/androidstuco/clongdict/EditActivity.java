@@ -31,6 +31,7 @@ public class EditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityEditBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        EditPronunciationUi.attach(this, binding);
 
         db = FirebaseFirestore.getInstance();
         if (getIntent().getExtras() != null && getIntent().getExtras().get("id") != null) {

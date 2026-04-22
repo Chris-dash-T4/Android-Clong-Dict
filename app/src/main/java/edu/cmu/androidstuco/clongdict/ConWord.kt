@@ -115,5 +115,17 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
             val schemaToml = context.assets.open(imeSchemaAsset).bufferedReader().use { it.readText() }
             engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
         }
+
+        /**
+         * Renders [headword] with the native IME engine (e.g. [format] `"ipa"`, `"font"`).
+         * Ensures [createEngine]; returns null if the engine is unavailable or render fails.
+         */
+        @JvmStatic
+        fun renderWithEngine(context: Context, headword: String, format: String): String? {
+            if (headword.isBlank()) return null
+            createEngine(context.applicationContext)
+            if (engineHandle == 0L) return null
+            return ClongImeNative.nativeRender(engineHandle, headword, format)
+        }
     }
 }
