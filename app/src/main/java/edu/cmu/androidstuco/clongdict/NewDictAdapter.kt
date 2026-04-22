@@ -17,7 +17,7 @@ class NewDictAdapter : RecyclerView.Adapter<NewDictAdapter.ViewHolder>() {
     /**
      * Provide a reference to the type of views that you are using (custom ViewHolder)
      */
-    class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
+    inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         val wordView: TextView = v.findViewById<View>(R.id.dictWordTV) as TextView
         val defView: TextView = v.findViewById<View>(R.id.dictDefTV) as TextView
         val pronView: TextView = v.findViewById<View>(R.id.dictPronTV) as TextView
@@ -37,20 +37,25 @@ class NewDictAdapter : RecyclerView.Adapter<NewDictAdapter.ViewHolder>() {
                 val fs = fm.fragments
                 //if (fs==null || fs.size()<1) Snackbar.make(v,"what",Snackbar.LENGTH_SHORT).show();
 
+                @Suppress("DEPRECATION")
+                val pos = adapterPosition
+                if (pos == RecyclerView.NO_POSITION) return@setOnClickListener
                 // Put the entry data in a bundle to send to the viewing fragment
                 val b0 = Bundle()
+                b0.putString("entryId", dataset[pos])
                 b0.putString("word", wordView.text.toString())
                 b0.putString("pron", pronView.text.toString())
                 b0.putString("lexcat", posView.text.toString())
                 b0.putString("def", defView.text.toString())
                 b0.putString("etym", etymView.text.toString())
-                b0.putInt("pos", adapterPosition)
+                b0.putInt("pos", pos)
                 val snd = SecondFragment()
                 snd.arguments = b0
                 val txn = fm.beginTransaction()
                 // allows for moving back to the list fragment w/o creating a new instance
                 txn.setReorderingAllowed(true)
                 txn.replace(R.id.fragment_container_view_tag, snd, null)
+                    .addToBackStack("entry")
                 (a.findViewById<View>(R.id.fab) as FloatingActionButton).setImageResource(android.R.drawable.ic_menu_edit)
                 txn.commit()
             }

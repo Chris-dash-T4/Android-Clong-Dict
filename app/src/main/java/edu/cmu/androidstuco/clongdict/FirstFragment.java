@@ -60,6 +60,19 @@ public class FirstFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        MainActivity a = (MainActivity) getActivity();
+        if (a == null || mRecyclerView == null || mAdapter == null) return;
+        if (a.pendingDictionaryScrollPos < 0) return;
+        int pos = a.pendingDictionaryScrollPos;
+        a.pendingDictionaryScrollPos = -1;
+        if (mAdapter.getItemCount() <= 0) return;
+        int target = Math.min(pos + 6, mAdapter.getItemCount() - 1);
+        mRecyclerView.postDelayed(() -> mRecyclerView.scrollToPosition(target), 100);
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;

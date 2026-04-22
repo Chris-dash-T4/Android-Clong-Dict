@@ -4,27 +4,22 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Trace;
 import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
-import android.text.style.UnderlineSpan;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import edu.cmu.androidstuco.clongdict.databinding.FragmentSecondBinding;
 import edu.cmu.androidstuco.clongdict.rust.ClongImeNative;
@@ -89,6 +84,34 @@ public class SecondFragment extends Fragment {
         return rendered != null ? rendered : word;
     }
 
+    private void navigateBackToList() {
+        MainActivity a = null;
+        Context c0 = requireContext();
+        while (c0 instanceof ContextWrapper && a == null) {
+            if (c0 instanceof MainActivity) a = (MainActivity) c0;
+            else c0 = ((ContextWrapper) c0).getBaseContext();
+        }
+        if (a == null) return;
+        Bundle args = getArguments();
+        if (args != null && args.getInt("pos", -1) >= 0) {
+            a.pendingDictionaryScrollPos = args.getInt("pos");
+        } else {
+            a.pendingDictionaryScrollPos = -1;
+        }
+        FragmentManager fm = getParentFragmentManager();
+        if (fm.getBackStackEntryCount() > 0) {
+            fm.popBackStack();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.fragment_container_view_tag, FirstFragment.class, null)
+                    .commit();
+        }
+        View fab = a.findViewById(R.id.fab);
+        if (fab instanceof FloatingActionButton) {
+            ((FloatingActionButton) fab).setImageResource(android.R.drawable.ic_input_add);
+        }
+    }
+
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
@@ -103,23 +126,16 @@ public class SecondFragment extends Fragment {
             binding.etymology.setText(args.getString("etym"));
         }
         //else binding.wordDisplay.setText(Integer.toString(this.getId()));
-        binding.buttonSecond.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Context c0 = view.getContext();
-                MainActivity a = null;
-                while (c0 instanceof ContextWrapper && a==null) {
-                    if (c0 instanceof MainActivity) a = (MainActivity) c0;
-                    else c0 = ((ContextWrapper)c0).getBaseContext();
-                }
-                FragmentManager fm = a.getSupportFragmentManager();
-                Bundle b0 = new Bundle();
-                if (args.getInt("pos",-1) >= 0) b0.putInt("pos",args.getInt("pos"));
-                // Return to list fragment
-                fm.beginTransaction().replace(R.id.fragment_container_view_tag,FirstFragment.class,b0).commit();
-            }
-        });
+        binding.buttonSecond.setOnClickListener(v -> navigateBackToList());
 
+        requireActivity().getOnBackPressedDispatcher().addCallback(
+                getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        navigateBackToList();
+                    }
+                });
     }
 
     @Override

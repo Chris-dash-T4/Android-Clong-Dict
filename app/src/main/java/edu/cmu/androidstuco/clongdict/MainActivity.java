@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.function.Function;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -66,59 +65,130 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private HashMap<String,String> langs;
     public FirebaseFirestore db;
+    /** Set by [SecondFragment] before [FragmentManager.popBackStack] so [FirstFragment] can restore scroll. */
+    public int pendingDictionaryScrollPos = -1;
     private AppBarConfiguration mAppBarConfiguration;
 
     // I may hold on to this for future use
     private AppBarConfiguration appBarConfiguration;
 
-    // I LOVE JAVA!!! I LOVE MAKING ENTIRE CLASSES FOR WHAT COULD HAVE BEEN A LAMBDA!!!
-    // -- ^ this message has been approved by the Functions Are Values committee
-    private Function<TextView, OnCompleteListener<QuerySnapshot>> deletionListener = tv -> new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                for (QueryDocumentSnapshot doc :
-                        task.getResult()) {
-                    if (doc.getData().get("word").equals(tv.getText().toString())) {
-                        Snackbar.make(MainActivity.this.findViewById(R.id.fragment_container_view_tag),
-                                "Deletion is irreversable, do you want to delete «"+doc.getData().get("word")+"»?",
-                                Snackbar.LENGTH_LONG)
-                                .setAction("CONFIRM", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        // This actually deletes the thing
-                                        db.collection(ConWord.lang) // TODO var
-                                                .document(doc.getId()).delete()
-                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                    @Override
-                                                    public void onSuccess(Void unused) {
-                                                        getSupportFragmentManager().beginTransaction()
-                                                                .replace(R.id.fragment_container_view_tag,
-                                                                        FirstFragment.class,
-                                                                        null)
-                                                                .commit();
-                                                        Snackbar.make(MainActivity.this
-                                                                        .findViewById(R.id.fragment_container_view_tag),
-                                                                "Deletion Successful.", Snackbar.LENGTH_SHORT)
-                                                                .show();
-                                                    }
-                                                })
-                                                .addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception e) {
-                                                        Snackbar.make(MainActivity.this
-                                                                        .findViewById(R.id.fragment_container_view_tag),
-                                                                "Deletion Failed.", Snackbar.LENGTH_SHORT)
-                                                                .show();
-                                                    }
-                                                });
-                                    }
-                                })
-                                .setActionTextColor(0xc0ff0000)
-                                .show();
-                    }
+
+    @Nullable
+    private SecondFragment findVisibleSecondFragment() {
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof SecondFragment && f.isVisible()) {
+                return (SecondFragment) f;
+            }
+        }
+        return null;
+    }
+
+    private void navigateBackToListAfterEntryRemoved() {
+        FragmentManager fm = getSupportFragmentManager();
+        if (fm.getBackStackEntryCount() > 0) {
+            fm.popBackStack();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.fragment_container_view_tag, FirstFragment.class, null)
+                    .commit();
+        }
+    }
+
+    private void startEditWithWordLookup(@NonNull Intent editIntent, @NonNull String rawLemma) {
+        if (ConWord.lang == null) {
+            Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        db.collection(ConWord.lang).get().addOnCompleteListener(task -> {
+            if (!task.isSuccessful() || task.getResult() == null) {
+                Toast.makeText(MainActivity.this,
+                        "Could not load entries to open editor.",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            for (QueryDocumentSnapshot doc : task.getResult()) {
+                Object w = doc.getData().get("word");
+                if (w != null && rawLemma.equals(w.toString())) {
+                    editIntent.putExtra("id", doc.getId());
+                    startActivity(editIntent);
+                    return;
                 }
             }
-        };
+            Toast.makeText(MainActivity.this,
+                    "No matching entry for this lemma.",
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void confirmDeleteCurrentEntry() {
+        SecondFragment second = findVisibleSecondFragment();
+        if (second == null || second.getArguments() == null) {
+            Toast.makeText(this, "No entry to delete", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (ConWord.lang == null) {
+            Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bundle args = second.getArguments();
+        String entryId = args.getString("entryId");
+        if (entryId != null && !entryId.isEmpty()) {
+            String label = args.getString("word");
+            if (label == null) label = entryId;
+            Snackbar.make(findViewById(R.id.fragment_container_view_tag),
+                            "Deletion is irreversable, do you want to delete «" + label + "»?",
+                            Snackbar.LENGTH_LONG)
+                    .setAction("CONFIRM", v -> db.collection(ConWord.lang).document(entryId).delete()
+                            .addOnSuccessListener(unused -> {
+                                navigateBackToListAfterEntryRemoved();
+                                Snackbar.make(findViewById(R.id.fragment_container_view_tag),
+                                        "Deletion Successful.", Snackbar.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> Snackbar.make(
+                                    findViewById(R.id.fragment_container_view_tag),
+                                    "Deletion Failed.", Snackbar.LENGTH_SHORT).show()))
+                    .setActionTextColor(0xc0ff0000)
+                    .show();
+            return;
+        }
+        String rawLemma = args.getString("word");
+        if (rawLemma == null) {
+            Toast.makeText(this, "No entry identifier", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        db.collection(ConWord.lang).get().addOnCompleteListener(task -> {
+            if (!task.isSuccessful() || task.getResult() == null) {
+                Toast.makeText(MainActivity.this,
+                        "Could not load entries to delete.",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            for (QueryDocumentSnapshot doc : task.getResult()) {
+                Object w = doc.getData().get("word");
+                if (w != null && rawLemma.equals(w.toString())) {
+                    String wordLabel = w.toString();
+                    Snackbar.make(findViewById(R.id.fragment_container_view_tag),
+                                    "Deletion is irreversable, do you want to delete «" + wordLabel + "»?",
+                                    Snackbar.LENGTH_LONG)
+                            .setAction("CONFIRM", v -> db.collection(ConWord.lang).document(doc.getId()).delete()
+                                    .addOnSuccessListener(unused -> {
+                                        navigateBackToListAfterEntryRemoved();
+                                        Snackbar.make(findViewById(R.id.fragment_container_view_tag),
+                                                "Deletion Successful.", Snackbar.LENGTH_SHORT).show();
+                                    })
+                                    .addOnFailureListener(e -> Snackbar.make(
+                                            findViewById(R.id.fragment_container_view_tag),
+                                            "Deletion Failed.", Snackbar.LENGTH_SHORT).show()))
+                            .setActionTextColor(0xc0ff0000)
+                            .show();
+                    return;
+                }
+            }
+            Toast.makeText(MainActivity.this,
+                    "No matching entry to delete.",
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
 
     private static Typeface clongUiTypeface(Context context) {
         Typeface base = ResourcesCompat.getFont(context, R.font.noto_sans_clong);
@@ -239,26 +309,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent i0 = new Intent(MainActivity.this, EditActivity.class);
-                if (findViewById(R.id.word_display)!=null) {
-                    TextView tv = (TextView) findViewById(R.id.word_display);
-
-                    // This grabs the ID of the given entry
-                    // Distinct titles are assumed, but not currently enforced
-                    db.collection(ConWord.lang) //TODO make var
-                            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            for (QueryDocumentSnapshot doc :
-                                    task.getResult()) {
-                                if (doc.getData().get("word").equals(tv.getText().toString())) {
-                                    i0.putExtra("id", doc.getId());
-                                    startActivity(i0);
-                                }
-                            }
-                        }
-                    });
+                SecondFragment second = findVisibleSecondFragment();
+                if (second != null && second.getArguments() != null) {
+                    Bundle args = second.getArguments();
+                    String entryId = args.getString("entryId");
+                    if (entryId != null && !entryId.isEmpty()) {
+                        i0.putExtra("id", entryId);
+                        startActivity(i0);
+                        return;
+                    }
+                    String rawWord = args.getString("word");
+                    if (rawWord != null) {
+                        startEditWithWordLookup(i0, rawWord);
+                        return;
+                    }
                 }
-                else startActivity(i0);
+                startActivity(i0);
             }
         });
 
@@ -376,12 +442,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
 
         case R.id.action_delete_entry:
-            TextView tv = findViewById(R.id.word_display);
-            if (tv == null) return false;
-            // if you manage to get this far without a language selected, you're on your own
-            assert ConWord.lang != null;
-            db.collection(ConWord.lang)
-                    .get().addOnCompleteListener(deletionListener.apply(tv));
+            confirmDeleteCurrentEntry();
             break;
         }
 
