@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Typeface
 import java.lang.StringBuilder
 import java.util.stream.IntStream
+import android.widget.Toast
+import java.io.FileNotFoundException
 
 import edu.cmu.androidstuco.clongdict.rust.ClongImeNative
 
@@ -93,7 +95,7 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
          * Change before [createEngine] when switching conlangs; call [destroyEngine] first if replacing an existing engine.
          */
         @JvmField
-        var imeSchemaAsset: String = "hxj.toml"
+        var defaultImeSchemaAsset: String = "default.toml"
 
         /** 0 = no engine or failed init. Use from Java as `ConWord.engineHandle == 0`. */
         @JvmField
@@ -112,8 +114,36 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
         @JvmStatic
         fun createEngine(context: Context) {
             if (engineHandle != 0L) return
-            val schemaToml = context.assets.open(imeSchemaAsset).bufferedReader().use { it.readText() }
-            engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
+            val imeSchemaAsset = "${lang}.toml"
+            // Attempt to load custom schema (${lang}.toml); if missing or malformed/unusable, fall back to default.toml
+            // Show user feedback for the exact failure mode; if default.toml is bad, that's a deeper app issue.
+            try {
+                val schemaToml = context.assets.open(imeSchemaAsset).bufferedReader().use { it.readText() }
+                try {
+                    engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
+                    // Check if native rejected the schema (malformed/toml error/validation failure, returns 0)
+                    if (engineHandle == 0L) {
+                        throw IllegalArgumentException("${imeSchemaAsset} is malformed")
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "${imeSchemaAsset} caused error: ${e.message}; using default.toml.", Toast.LENGTH_LONG).show()
+                    throw e // force fallback
+                }
+            } catch (e: Exception) {
+                // Handles both FileNotFoundException (custom schema missing) and malformed schema fallback
+                try {
+                    val schemaToml = context.assets.open(defaultImeSchemaAsset).bufferedReader().use { it.readText() }
+                    engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
+                    // Again, check for native schema validation, malformed, etc.
+                    if (engineHandle == 0L) {
+                        Toast.makeText(context, "Default schema is malformed! Cannot load dictionary.", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e2: Exception) {
+                    // If default.toml fails to load or is malformed, show critical error
+                    Toast.makeText(context, "Critical: failed to load any schema: ${e2.message}", Toast.LENGTH_LONG).show()
+                    e2.printStackTrace()
+                }
+            }
         }
 
         /**

@@ -1,6 +1,5 @@
 package edu.cmu.androidstuco.clongdict
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Bundle
@@ -49,7 +48,7 @@ class NewDictAdapter : RecyclerView.Adapter<NewDictAdapter.ViewHolder>() {
                 b0.putString("def", defView.text.toString())
                 b0.putString("etym", etymView.text.toString())
                 b0.putInt("pos", pos)
-                val snd = SecondFragment()
+                val snd = EntryFragment()
                 snd.arguments = b0
                 val txn = fm.beginTransaction()
                 // allows for moving back to the list fragment w/o creating a new instance

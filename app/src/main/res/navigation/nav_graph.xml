@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/dictFragment"
-        android:name="edu.cmu.androidstuco.clongdict.FirstFragment"
+        android:name="edu.cmu.androidstuco.clongdict.BrowseFragment"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_first">
 
@@ -20,7 +20,7 @@
     </fragment>
     <fragment
         android:id="@+id/entryFragment"
-        android:name="edu.cmu.androidstuco.clongdict.SecondFragment"
+        android:name="edu.cmu.androidstuco.clongdict.EntryFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">
 

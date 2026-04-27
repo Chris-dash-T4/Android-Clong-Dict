@@ -15,7 +15,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import edu.cmu.androidstuco.clongdict.databinding.FragmentFirstBinding;
 
-public class FirstFragment extends Fragment {
+public class BrowseFragment extends Fragment {
 
     private FragmentFirstBinding binding;
 

@@ -12,6 +12,8 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <item name="android:textColorPrimary">@color/grey_900</item>
+        <item name="android:actionMenuTextColor">@color/grey_900</item>
     </style>
 
     <style name="Theme.ClongDict.NoActionBar">

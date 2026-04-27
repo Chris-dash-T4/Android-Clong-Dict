@@ -11,17 +11,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.ContextMenu;
-import android.view.SubMenu;
 import android.view.View;
 
-import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
@@ -38,11 +33,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -74,10 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Nullable
-    private SecondFragment findVisibleSecondFragment() {
+    private EntryFragment findVisibleSecondFragment() {
         for (Fragment f : getSupportFragmentManager().getFragments()) {
-            if (f instanceof SecondFragment && f.isVisible()) {
-                return (SecondFragment) f;
+            if (f instanceof EntryFragment && f.isVisible()) {
+                return (EntryFragment) f;
             }
         }
         return null;
@@ -89,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             fm.popBackStack();
         } else {
             fm.beginTransaction()
-                    .replace(R.id.fragment_container_view_tag, FirstFragment.class, null)
+                    .replace(R.id.fragment_container_view_tag, BrowseFragment.class, null)
                     .commit();
         }
     }
@@ -121,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void confirmDeleteCurrentEntry() {
-        SecondFragment second = findVisibleSecondFragment();
+        EntryFragment second = findVisibleSecondFragment();
         if (second == null || second.getArguments() == null) {
             Toast.makeText(this, "No entry to delete", Toast.LENGTH_SHORT).show();
             return;
@@ -309,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent i0 = new Intent(MainActivity.this, EditActivity.class);
-                SecondFragment second = findVisibleSecondFragment();
+                EntryFragment second = findVisibleSecondFragment();
                 if (second != null && second.getArguments() != null) {
                     Bundle args = second.getArguments();
                     String entryId = args.getString("entryId");
@@ -336,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
             b0.putString("lexcat",getIntent().getStringExtra("lexcat"));
             b0.putString("def" ,getIntent().getStringExtra("def"));
             b0.putString("etym",getIntent().getStringExtra("etym"));
-            SecondFragment snd = new SecondFragment();
+            EntryFragment snd = new EntryFragment();
             snd.setArguments(b0);
             ((FloatingActionButton) findViewById(R.id.fab)).setImageResource(android.R.drawable.ic_menu_edit); // Pencil, ic_menu_edit
             fm.beginTransaction().setReorderingAllowed(true)
@@ -347,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (ConWord.lang != null) {
             fm.beginTransaction().setReorderingAllowed(true)
-                    .replace(R.id.fragment_container_view_tag, FirstFragment.class, null)
+                    .replace(R.id.fragment_container_view_tag, BrowseFragment.class, null)
                     .addToBackStack("dict").commit();
         }
         else {
@@ -371,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
         ConWord.clongTypeface = clongUiTypeface(MainActivity.this);
         // TODO reload fragment
         this.getSupportFragmentManager().beginTransaction().setReorderingAllowed(true)
-                .replace(R.id.fragment_container_view_tag,FirstFragment.class,null)
+                .replace(R.id.fragment_container_view_tag, BrowseFragment.class,null)
                 .addToBackStack("dict").commit();
     }
 
@@ -387,11 +379,11 @@ public class MainActivity extends AppCompatActivity {
         if (!super.onPrepareOptionsMenu(menu)) return false;
         for (Fragment f : this.getSupportFragmentManager().getFragments()) {
             if (f.isVisible()) {
-                if (f instanceof FirstFragment) {
+                if (f instanceof BrowseFragment) {
                     menu.findItem(R.id.action_delete_entry).setVisible(false);
                     menu.findItem(R.id.action_settings).setVisible(true);
                 }
-                else if (f instanceof SecondFragment) {
+                else if (f instanceof EntryFragment) {
                     menu.findItem(R.id.action_delete_entry).setVisible(true);
                     TextView tv = findViewById(R.id.word_display);
                     if (tv != null) menu.findItem(R.id.action_delete_entry).setTitle("Delete entry «"+tv.getText()+"»");
