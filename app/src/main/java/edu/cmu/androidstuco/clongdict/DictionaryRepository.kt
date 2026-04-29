@@ -25,6 +25,7 @@ object DictionaryRepository {
                     }
                     val lex = get("part_of_speech").ifEmpty { get("lex_category") }
                     val e = NewDictEntry(
+                        doc.id,
                         ConWord(get("word")),
                         get("pronunciation"),
                         lex,

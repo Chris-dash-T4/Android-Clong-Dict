@@ -3,7 +3,7 @@ package edu.cmu.androidstuco.clongdict.obj
 import edu.cmu.androidstuco.clongdict.ConWord
 
 // TODO make `definition` into an FString
-class NewDictEntry(var word: ConWord, var pronunciation: String, var lexCategory: String, var definition: String, var etymology: String) {
+class NewDictEntry(val id: String, var word: ConWord, var pronunciation: String, var lexCategory: String, var definition: String, var etymology: String) {
 
     fun setWord(word: String) {
         this.word = ConWord(word)

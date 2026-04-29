@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,8 +49,9 @@ public class SearchActivity extends AppCompatActivity {
 
         Toolbar toolbar = binding.toolbar;
         setSupportActionBar(toolbar);
-        CollapsingToolbarLayout toolBarLayout = binding.toolbarLayout;
-        toolBarLayout.setTitle(getTitle());
+        //ConstraintLayout toolBarLayout = binding.toolbarLayout;
+        toolbar.setTitle(getTitle());
+        getSupportActionBar().setTitle(getTitle());
 
         FloatingActionButton fab = binding.fab;
         fab.setOnClickListener(new View.OnClickListener() {
@@ -85,6 +87,13 @@ public class SearchActivity extends AppCompatActivity {
         }
         sView.setIconifiedByDefault(false);
         sView.setSubmitButtonEnabled(true);
+        binding.switchSemanticSearch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (srAdapter != null) {
+                srAdapter.setSemanticSearch(isChecked);
+                srAdapter.triggerFilterUpdate();
+            }
+        });
+
         sView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -92,6 +101,8 @@ public class SearchActivity extends AppCompatActivity {
                 i1.setAction(Intent.ACTION_SEARCH);
                 i1.putExtra(SearchManager.QUERY, query);
                 SearchActivity.this.onNewIntent(i1);
+                // Force update on submit; applies to both text and semantic search.
+                if (srAdapter != null) srAdapter.triggerFilterUpdate();
                 return true;
             }
 
@@ -117,6 +128,10 @@ public class SearchActivity extends AppCompatActivity {
         super.onNewIntent(intent);
     }
 
+    private void setSemanticEmbeddingLoading(boolean loading) {
+        binding.semanticSearchLoadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
+    }
+
     private void handleIntent(Intent intent) {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
@@ -129,15 +144,19 @@ public class SearchActivity extends AppCompatActivity {
                 if (langPath != null) {
                     //Toast.makeText(this,"langPath: "+langPath, Toast.LENGTH_SHORT).show();
                     srAdapter = new SearchResultAdapterV2(
+                            this,
                             FirebaseFirestore.getInstance(),
                             langPath,
-                            qNorm);
+                            qNorm,
+                            this::setSemanticEmbeddingLoading);
                     //Toast.makeText(this,"srAdapter created successfully", Toast.LENGTH_SHORT).show();
                 } else {
-                    srAdapter = new SearchResultAdapterV2(qNorm);
+                    srAdapter = new SearchResultAdapterV2(this, qNorm, this::setSemanticEmbeddingLoading);
                 }
                 rView.setAdapter(srAdapter);
-            } else {
+            }
+            srAdapter.setSemanticSearch(binding.switchSemanticSearch.isChecked());
+            if (!pathChanged) {
                 srAdapter.setQuery(qNorm);
             }
             lastHandledNormalizedQuery = qNorm;

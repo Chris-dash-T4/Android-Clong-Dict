@@ -85,7 +85,8 @@ tasks.register("cargoNdkBuild", Exec) {
             "-t", "x86_64",
             "-o", rustJniLibsDir.absolutePath,
             "build", "--release",
-            "-p", "clong_ime_jni"
+            "-p", "clong_ime_jni",
+            "-p", "semantic_search_jni"
     )
 }
 

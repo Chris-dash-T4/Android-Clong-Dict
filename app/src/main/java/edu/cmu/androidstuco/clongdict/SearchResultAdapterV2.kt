@@ -20,6 +20,12 @@ import java.util.Locale
 import java.util.NavigableSet
 import java.util.TreeSet
 import java.util.concurrent.Executors
+import edu.cmu.androidstuco.clongdict.rust.SemanticSearchHelper
+
+/** Show/hide UI (e.g. spinner overlay) while embedding prefetch runs; always invoked on the main thread. */
+fun interface EmbeddingLoadCallback {
+    fun onEmbeddingLoading(isLoading: Boolean)
+}
 
 /**
  * Search results backed by a [fullDataSet] cache; [setQuery] only re-filters in memory instead of
@@ -38,6 +44,8 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
     private val mDataSet = ArrayList<NewDictEntry>()
     private lateinit var fullDataSet: NavigableSet<NewDictEntry>
     private var query: String? = null
+    private var semanticSearch: Boolean = false
+    private val similarityThreshold: Double = 0.5
 
     /**
      * Headword order follows [Comparable] on [ConWord] (conlang alphabet via [ConWord.getSortString],
@@ -55,6 +63,14 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
     /** Firestore collection id when this adapter loads from Firebase; null when using [LingUtils.dataset]. */
     private var backingCollectionPath: String? = null
 
+    /** For [SemanticSearchHelper] Toasts; use application context to avoid retaining an Activity. */
+    private val toastContext: Context
+
+    private val embeddingLoadCallback: EmbeddingLoadCallback?
+
+    /** Cancels stale embedding completions when the user toggles semantic mode again. */
+    private var embeddingJobGeneration: Int = 0
+
     /** Used by [SearchActivity] to decide whether to recycle the adapter or rebuild after a language switch. */
     fun getBackingCollectionPath(): String? = backingCollectionPath
 
@@ -63,7 +79,9 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
      * [TreeSet]). External mutations to the list after that are not reflected unless the adapter
      * is recreated or entries are added via [pushElement].
      */
-    constructor(query: String?) : super() {
+    constructor(context: Context, query: String?, embeddingLoadCallback: EmbeddingLoadCallback? = null) : super() {
+        toastContext = context.applicationContext
+        this.embeddingLoadCallback = embeddingLoadCallback
         backingCollectionPath = null
         fullDataSet = TreeSet(dictEntryLexOrder)
         LingUtils.dataset?.let { fullDataSet.addAll(it) }
@@ -74,7 +92,15 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
     /**
      * Load the collection once into [fullDataSet], then apply the initial [query] filter.
      */
-    constructor(db: FirebaseFirestore, path: String, query: String?) : super() {
+    constructor(
+        context: Context,
+        db: FirebaseFirestore,
+        path: String,
+        query: String?,
+        embeddingLoadCallback: EmbeddingLoadCallback? = null,
+    ) : super() {
+        toastContext = context.applicationContext
+        this.embeddingLoadCallback = embeddingLoadCallback
         backingCollectionPath = path
         this.query = query
         fullDataSet = TreeSet(dictEntryLexOrder)
@@ -91,6 +117,7 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
                 val lex = getKey("part_of_speech").ifEmpty { getKey("lex_category") }
                 rows.add(
                     NewDictEntry(
+                        doc.id,
                         ConWord(getKey("word")),
                         getKey("pronunciation"),
                         lex,
@@ -108,11 +135,45 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
     }
 
     /**
+     * Mirrors the activity’s “Semantic Search” switch; call from [SearchActivity] when the intent
+     * is handled or when the switch changes so filtering uses the current mode.
+     */
+    fun setSemanticSearch(enabled: Boolean) {
+        if (enabled) {
+            if (semanticSearch) return
+            embeddingJobGeneration++
+            val gen = embeddingJobGeneration
+            val docs = ArrayList(fullDataSet)
+            mainHandler.post { embeddingLoadCallback?.onEmbeddingLoading(true) }
+            filterExecutor.execute {
+                SemanticSearchHelper.getEmbeddings(docs, null)
+                mainHandler.post {
+                    if (gen != embeddingJobGeneration) return@post
+                    embeddingLoadCallback?.onEmbeddingLoading(false)
+                    semanticSearch = true
+                    scheduleFilterAsync(query)
+                }
+            }
+            return
+        }
+        embeddingJobGeneration++
+        semanticSearch = false
+        mainHandler.post { embeddingLoadCallback?.onEmbeddingLoading(false) }
+        scheduleFilterAsync(query)
+    }
+
+    /**
      * Update the search string and re-filter from [fullDataSet] only (no Firestore / full rescan).
      * Work is done off the UI thread; [notifyDataSetChanged] runs on the main thread.
      */
     fun setQuery(query: String?) {
         this.query = query
+        if (!semanticSearch) {
+            scheduleFilterAsync(query)
+        }
+    }
+
+    fun triggerFilterUpdate() {
         scheduleFilterAsync(query)
     }
 
@@ -140,10 +201,22 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         notifyDataSetChanged()
     }
 
-    private fun computeMatches(source: Iterable<NewDictEntry>, q: String?): ArrayList<NewDictEntry> {
+    private fun computeMatches(source: Iterable<NewDictEntry>, q: String?): Iterable<NewDictEntry> {
+        if (q == null) return source
         val out = ArrayList<NewDictEntry>()
-        for (e in source) {
-            if (matchesQuery(e, q)) out.add(e)
+        if (semanticSearch) {
+            // Runs on filterExecutor — never Toast here (main thread only).
+            val scores = SemanticSearchHelper.semanticSearch(q!!, source, null)
+            val sorted = scores.filter { (score, _) -> score >= similarityThreshold }
+                .sortedByDescending { (score, _) -> score }
+            for (pair in sorted) {
+                out.add(pair.second)
+            }
+        }
+        else {
+            for (e in source) {
+                if (matchesQuery(e, q)) out.add(e)
+            }
         }
         return out
     }

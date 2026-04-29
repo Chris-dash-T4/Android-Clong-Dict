@@ -2,6 +2,8 @@
 //!
 //! Java class: `edu.cmu.androidstuco.clongdict.rust.ClongImeNative`
 
+#![allow(non_snake_case)] // JNI `Java_*` / `JNI_OnLoad` names are fixed by the JVM
+
 use std::ffi::c_void;
 use std::sync::Mutex;
 
