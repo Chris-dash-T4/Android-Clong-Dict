@@ -8,7 +8,6 @@ import android.os.Bundle;
 
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -119,6 +118,18 @@ public class SearchActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SearchResultAdapterV2.bindSnackbarActivity(this);
+    }
+
+    @Override
+    protected void onPause() {
+        SearchResultAdapterV2.clearSnackbarActivity(this);
+        super.onPause();
     }
 
     @Override

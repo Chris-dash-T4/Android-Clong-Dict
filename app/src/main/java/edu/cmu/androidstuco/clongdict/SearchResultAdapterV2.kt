@@ -9,8 +9,10 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +22,11 @@ import java.util.Locale
 import java.util.NavigableSet
 import java.util.TreeSet
 import java.util.concurrent.Executors
+import com.google.android.material.snackbar.Snackbar
 import edu.cmu.androidstuco.clongdict.rust.SemanticSearchHelper
+import android.app.Activity
+import android.os.Build
+import java.lang.ref.WeakReference
 
 /** Show/hide UI (e.g. spinner overlay) while embedding prefetch runs; always invoked on the main thread. */
 fun interface EmbeddingLoadCallback {
@@ -39,6 +45,107 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
             Thread(r, "clong-dict-search-filter").apply { isDaemon = true }
         }
         private val mainHandler = Handler(Looper.getMainLooper())
+
+        /**
+         * Set when any adapter is constructed so JNI/static callbacks (e.g. embedding progress)
+         * can show UI on the main thread without holding an Activity.
+         */
+        @Volatile
+        private var toastApplicationContext: Context? = null
+
+        /** Resumed activity that can anchor a [Snackbar] (never hold a strong ref). */
+        private var snackbarActivityRef: WeakReference<Activity> = WeakReference(null)
+
+        internal fun bindToastContext(context: Context) {
+            toastApplicationContext = context.applicationContext
+        }
+
+        /**
+         * Call from a visible screen (e.g. [android.app.Activity.onResume]) so [showToastSync]
+         * can use [Snackbar] anchored to the window. Cleared in [clearSnackbarActivity].
+         */
+        @JvmStatic
+        fun bindSnackbarActivity(activity: Activity) {
+            snackbarActivityRef = WeakReference(activity)
+        }
+
+        @JvmStatic
+        fun clearSnackbarActivity(activity: Activity) {
+            if (snackbarActivityRef.get() === activity) {
+                snackbarActivityRef.clear()
+            }
+        }
+
+        private fun Activity.canShowSnackbar(): Boolean {
+            if (isFinishing) return false
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) !isDestroyed else true
+        }
+
+        private fun showFullMessageDialog(activity: Activity, message: String) {
+            if (!activity.canShowSnackbar()) return
+            val scroll = ScrollView(activity)
+            val tv = TextView(activity).apply {
+                text = message
+                val pad = (24 * resources.displayMetrics.density).toInt()
+                setPadding(pad, pad, pad, pad)
+                textSize = 14f
+                setTextIsSelectable(true)
+            }
+            scroll.addView(
+                tv,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+            AlertDialog.Builder(activity)
+                .setTitle("Details")
+                .setView(scroll)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+
+        /**
+         * Show a Toast from any thread (background executor, JNI attach thread, etc.).
+         * No-op if [bindToastContext] has not run yet.
+         *
+         * For [length] values greater than [Toast.LENGTH_LONG], tries [Snackbar] on the activity
+         * registered with [bindSnackbarActivity], then falls back to a long Toast.
+         */
+        @JvmStatic
+        fun showToastSync(message: String, length: Int = Toast.LENGTH_SHORT) {
+            if (length < 0) {
+                throw IllegalArgumentException("Invalid Toast length: $length")
+            }
+            val ctx = toastApplicationContext ?: return
+            val show = Runnable {
+                if (length > Toast.LENGTH_LONG) {
+                    val activity = snackbarActivityRef.get()
+                    val root =
+                        if (activity != null && activity.canShowSnackbar()) {
+                            activity.findViewById<View>(android.R.id.content)
+                        } else {
+                            null
+                        }
+                    if (root != null && activity != null) {
+                        Snackbar.make(root, message, Snackbar.LENGTH_LONG)
+                            .setAction("FULL") {
+                                showFullMessageDialog(activity, message)
+                            }
+                            .show()
+                    } else {
+                        Toast.makeText(ctx, message, Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(ctx, message, length).show()
+                }
+            }
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                show.run()
+            } else {
+                mainHandler.post(show)
+            }
+        }
     }
 
     private val mDataSet = ArrayList<NewDictEntry>()
@@ -81,6 +188,8 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
      */
     constructor(context: Context, query: String?, embeddingLoadCallback: EmbeddingLoadCallback? = null) : super() {
         toastContext = context.applicationContext
+        bindToastContext(context)
+        SemanticSearchHelper.ensureEmbeddingDiskCachePath(context)
         this.embeddingLoadCallback = embeddingLoadCallback
         backingCollectionPath = null
         fullDataSet = TreeSet(dictEntryLexOrder)
@@ -100,6 +209,8 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         embeddingLoadCallback: EmbeddingLoadCallback? = null,
     ) : super() {
         toastContext = context.applicationContext
+        bindToastContext(context)
+        SemanticSearchHelper.ensureEmbeddingDiskCachePath(context)
         this.embeddingLoadCallback = embeddingLoadCallback
         backingCollectionPath = path
         this.query = query
@@ -206,7 +317,7 @@ class SearchResultAdapterV2 : RecyclerView.Adapter<SearchResultAdapterV2.ViewHol
         val out = ArrayList<NewDictEntry>()
         if (semanticSearch) {
             // Runs on filterExecutor — never Toast here (main thread only).
-            val scores = SemanticSearchHelper.semanticSearch(q!!, source, null)
+            val scores = SemanticSearchHelper.semanticSearch(q, source, null)
             val sorted = scores.filter { (score, _) -> score >= similarityThreshold }
                 .sortedByDescending { (score, _) -> score }
             for (pair in sorted) {

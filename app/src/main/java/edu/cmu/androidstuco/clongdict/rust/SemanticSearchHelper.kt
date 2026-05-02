@@ -1,11 +1,14 @@
 package edu.cmu.androidstuco.clongdict.rust
 
+import java.io.File
 import java.security.MessageDigest
-import edu.cmu.androidstuco.clongdict.obj.NewDictEntry
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+
+import edu.cmu.androidstuco.clongdict.obj.NewDictEntry
+import edu.cmu.androidstuco.clongdict.SearchResultAdapterV2
 
 /**
  * JNI entry points for `rust/clong_ime_jni` ([conlang-ime] headless engine).
@@ -18,6 +21,24 @@ object SemanticSearchHelper {
     init {
         System.loadLibrary("semantic_search_jni")
     }
+
+    @Volatile
+    private var diskCachePathInitialized: Boolean = false
+
+    /**
+     * Must be called once with an app [Context] so Rust can read/write the embedding cache under
+     * private app storage (not the process CWD, which is invalid on Android).
+     */
+    @Synchronized
+    fun ensureEmbeddingDiskCachePath(context: Context) {
+        if (diskCachePathInitialized) return
+        val f = File(context.applicationContext.filesDir, "embedding_cache.bin")
+        nativeSetEmbeddingCachePath(f.absolutePath)
+        diskCachePathInitialized = true
+    }
+
+    @JvmStatic
+    private external fun nativeSetEmbeddingCachePath(absolutePath: String)
 
     /**
      * Performs semantic search for [query] and returns the results.
@@ -50,23 +71,35 @@ object SemanticSearchHelper {
         if (entries.isEmpty()) return emptyList()
         val documentStrings = entries.map { dictEntryToDocumentString(it) }
         val ids = entries.map { dictEntryToIdString(it) }
-        if (toastContext != null) {
-            Handler(Looper.getMainLooper()).post {
-                Toast.makeText(toastContext, "Semantic search started", Toast.LENGTH_SHORT).show()
-            }
-        }
-        val raw = nativeSemanticSearch(query, documentStrings.toTypedArray(), ids.toTypedArray())
+        SearchResultAdapterV2.showToastSync("Starting semantic search...", Toast.LENGTH_SHORT)
+        val raw = nativeSemanticSearch(
+            query,
+            documentStrings.toTypedArray(),
+            ids.toTypedArray(),
+        )
         val scores = raw?.toList().orEmpty()
         if (scores.size != entries.size) return emptyList()
         return scores.zip(entries).map { (score, entry) -> score to entry }
     }
 
     fun getEmbeddings(documents: Iterable<NewDictEntry>, toastContext: Context?): Int {
-        if (toastContext != null) {
-            Toast.makeText(toastContext, "Getting embeddings", Toast.LENGTH_SHORT).show()
-        }
+        SearchResultAdapterV2.showToastSync("Getting embeddings", Toast.LENGTH_SHORT)
         val documentStrings = documents.map { dictEntryToDocumentString(it) }
         val ids = documents.map { dictEntryToIdString(it) }
-        return nativeGetEmbeddings(documentStrings.toTypedArray(), ids.toTypedArray())
+        try {
+            val result = nativeGetEmbeddings(documentStrings.toTypedArray(), ids.toTypedArray())
+            if (result < 0) {
+                throw RuntimeException("Failed to get embeddings")
+            }
+            return result
+        } catch (e: Exception) {
+            SearchResultAdapterV2.showToastSync("Error getting embeddings: ${e.message}", Toast.LENGTH_LONG + 1)
+            return -1
+        }
+    }
+
+    @JvmStatic
+    private fun progressUpdate(total: Int, current: Int) {
+        SearchResultAdapterV2.showToastSync("Progress: $current/$total", Toast.LENGTH_SHORT)
     }
 }
