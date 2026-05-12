@@ -126,7 +126,7 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
                         throw IllegalArgumentException("${imeSchemaAsset} is malformed")
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "${imeSchemaAsset} caused error: ${e.message}; using default.toml.", Toast.LENGTH_LONG).show()
+                    Toaster.showToastSync("${imeSchemaAsset} caused error: ${e.message}; using default.toml.", Toaster.ToasterConfig.LONG_TOAST)
                     throw e // force fallback
                 }
             } catch (e: Exception) {
@@ -136,11 +136,11 @@ class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
                     engineHandle = ClongImeNative.nativeEngineCreate(schemaToml)
                     // Again, check for native schema validation, malformed, etc.
                     if (engineHandle == 0L) {
-                        Toast.makeText(context, "Default schema is malformed! Cannot load dictionary.", Toast.LENGTH_LONG).show()
+                        Toaster.showToastSync("Default schema is malformed! Cannot load dictionary.", Toaster.ToasterConfig.LONG_TOAST)
                     }
                 } catch (e2: Exception) {
                     // If default.toml fails to load or is malformed, show critical error
-                    Toast.makeText(context, "Critical: failed to load any schema: ${e2.message}", Toast.LENGTH_LONG).show()
+                    Toaster.showToastSync("Critical: failed to load any schema: ${e2.message}", Toaster.ToasterConfig.LONG_TOAST)
                     e2.printStackTrace()
                 }
             }

@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import edu.cmu.androidstuco.clongdict.ConWord
 import edu.cmu.androidstuco.clongdict.R
 import edu.cmu.androidstuco.clongdict.obj.NewDictEntry
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 data class State(val dataSource: FirebaseFirestore, val context: Context) {
     companion object {
@@ -26,7 +27,7 @@ data class State(val dataSource: FirebaseFirestore, val context: Context) {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     for (document in task.result!!) {
-                        //Toast.makeText(MainActivity.this,document.getId() + " => " + document.getData(), Toast.LENGTH_LONG).show();
+                        //Toaster.showToastSync(document.getId() + " => " + document.getData(), Toaster.ToasterConfig.LONG_TOAST);
                         languagesList.put(document.data["path"]!! as String, document.data["Name"]!! as String)
                         // TODO re-integrate with drawer and other such
                         if (language == document.data["language"]) {

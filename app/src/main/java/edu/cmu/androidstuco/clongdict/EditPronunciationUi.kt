@@ -54,17 +54,16 @@ private class Controller(
     private fun onSuggestFromHeadword() {
         val word = binding.word.text?.toString()?.trim().orEmpty()
         if (word.isEmpty()) {
-            Toast.makeText(activity, R.string.pronunciation_need_headword, Toast.LENGTH_SHORT).show()
+            Toaster.showToastSync(activity.getString(R.string.pronunciation_need_headword), Toaster.ToasterConfig.SHORT_TOAST);
             return
         }
         val ipa = ConWord.renderWithEngine(activity, word, "ipa")
         if (ipa == null) {
             val err = ClongImeNative.nativeGetLastError()
-            Toast.makeText(
-                activity,
+            Toaster.showToastSync(
                 if (err.isNullOrBlank()) activity.getString(R.string.pronunciation_engine_error_generic) else err,
-                Toast.LENGTH_LONG,
-            ).show()
+                Toaster.ToasterConfig.LONG_TOAST,
+            );
             return
         }
         lastEngineIpa = ipa
@@ -91,7 +90,7 @@ private class Controller(
     private fun showInsertAppendMenu(anchor: View) {
         val ipa = lastEngineIpa
         if (ipa == null) {
-            Toast.makeText(activity, R.string.pronunciation_need_auto_first, Toast.LENGTH_SHORT).show()
+            Toaster.showToastSync(activity.getString(R.string.pronunciation_need_auto_first), Toaster.ToasterConfig.SHORT_TOAST);
             return
         }
         PopupMenu(activity, anchor, Gravity.END).apply {

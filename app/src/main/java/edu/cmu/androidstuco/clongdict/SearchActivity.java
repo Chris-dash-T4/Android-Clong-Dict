@@ -121,18 +121,6 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        SearchResultAdapterV2.bindSnackbarActivity(this);
-    }
-
-    @Override
-    protected void onPause() {
-        SearchResultAdapterV2.clearSnackbarActivity(this);
-        super.onPause();
-    }
-
-    @Override
     protected void onNewIntent(Intent intent) {
         setIntent(intent);
         handleIntent(intent);

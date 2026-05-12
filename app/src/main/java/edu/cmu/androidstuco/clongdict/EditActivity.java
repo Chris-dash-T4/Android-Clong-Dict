@@ -37,12 +37,12 @@ public class EditActivity extends AppCompatActivity {
         if (getIntent().getExtras() != null && getIntent().getExtras().get("id") != null) {
             String entry_id = (String) getIntent().getExtras().get("id");
             if (ConWord.lang == null) {
-                Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
                 return;
             }
             db.collection(ConWord.lang).document(entry_id).get().addOnCompleteListener(task -> {
                 if (!task.isSuccessful() || task.getResult() == null || !task.getResult().exists()) {
-                    Toast.makeText(EditActivity.this, "Could not load entry.", Toast.LENGTH_SHORT).show();
+                    Toaster.showToastSync("Could not load entry.", Toaster.ToasterConfig.SHORT_TOAST);
                     return;
                 }
                 DocumentSnapshot doc = task.getResult();
@@ -64,20 +64,19 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void performFirestoreAdd(@NonNull HashMap<String, Object> e_map) {
-        Snackbar s0 = Snackbar.make(binding.getRoot(), "Saving...", Snackbar.LENGTH_INDEFINITE);
-        s0.show();
+        Snackbar s0 = Toaster.showToastSync("Saving...", Toaster.ToasterConfig.INDEFINITE_SNACKBAR);
         db.collection(ConWord.lang).add(e_map).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
-                        s0.dismiss();
+                        if (s0 != null) s0.dismiss();
                         startActivity(new Intent(EditActivity.this, MainActivity.class));
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        s0.dismiss();
-                        Snackbar.make(binding.getRoot(), "Oops! Something went wrong.", Snackbar.LENGTH_SHORT).show();
+                        if (s0 != null) s0.dismiss();
+                        Toaster.showToastSync("Oops! Something went wrong.", Toaster.ToasterConfig.SHORT_SNACKBAR);
                     }
                 });
     }
@@ -90,32 +89,31 @@ public class EditActivity extends AppCompatActivity {
         e_map.put("part_of_speech", binding.partOfSpeech.getText().toString());
         e_map.put("definition", binding.definition.getText().toString());
         e_map.put("etymology", binding.etymology.getText().toString());
-        Snackbar s0 = Snackbar.make(binding.getRoot(), "Saving...", Snackbar.LENGTH_INDEFINITE);
         if (getIntent().getExtras() != null && getIntent().getExtras().get("id") != null) {
             String entry_id = (String) getIntent().getExtras().get("id");
             if (ConWord.lang == null) {
-                Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
                 return;
             }
-            s0.show();
+            Snackbar s0 = Toaster.showToastSync("Saving...", Toaster.ToasterConfig.LONG_SNACKBAR);
             db.collection(ConWord.lang).document(entry_id).set(e_map)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void unit) {
-                            s0.dismiss();
+                            if (s0 != null) s0.dismiss();
                             startActivity(i1);
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            s0.dismiss();
+                            if (s0 != null) s0.dismiss();
                             Snackbar.make(binding.getRoot(), "Oops! Something went wrong.", Snackbar.LENGTH_SHORT).show();
                         }
                     });
         } else {
             if (ConWord.lang == null) {
-                Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
                 return;
             }
             String lemma = binding.word.getText().toString().trim();
@@ -126,9 +124,7 @@ public class EditActivity extends AppCompatActivity {
             db.collection(ConWord.lang).whereEqualTo("word", lemma).get()
                     .addOnCompleteListener((Task<QuerySnapshot> task) -> {
                         if (!task.isSuccessful() || task.getResult() == null) {
-                            Toast.makeText(EditActivity.this,
-                                    "Could not check for duplicates.",
-                                    Toast.LENGTH_SHORT).show();
+                            Toaster.showToastSync("Could not check for duplicates.", Toaster.ToasterConfig.SHORT_TOAST);
                             return;
                         }
                         QuerySnapshot qs = task.getResult();

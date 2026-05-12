@@ -127,10 +127,10 @@ public class LoginActivity extends AppCompatActivity {
     private void updateUiWithUser(LoggedInUserView model) {
         String welcome = "Welcome, " + model.getDisplayName() + "!";
         // TODO : initiate successful logged in experience
-        Toast.makeText(getApplicationContext(), welcome, Toast.LENGTH_LONG).show();
+        Toaster.showToastSync(welcome, Toaster.ToasterConfig.LONG_TOAST);
     }
 
     private void showLoginFailed(@StringRes Integer errorString) {
-        Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+        Toaster.showToastSync(errorString, Toaster.ToasterConfig.SHORT_TOAST);
     }
 }

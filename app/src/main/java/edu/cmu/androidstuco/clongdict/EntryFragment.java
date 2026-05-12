@@ -67,19 +67,19 @@ public class EntryFragment extends Fragment {
 
     private String showWord(String word) {
         if (word == null) {
-            Toast.makeText(requireActivity(), "word is null", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("word is null", Toaster.ToasterConfig.SHORT_TOAST);
             return "";
         }
         if (ConWord.engineHandle == 0) {
             ConWord.createEngine(requireActivity().getApplicationContext());
         }
         if (ConWord.engineHandle == 0) {
-            Toast.makeText(requireActivity(), "engine handle creation failed", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("engine handle creation failed", Toaster.ToasterConfig.SHORT_TOAST);
             return word;
         }
         String rendered = ClongImeNative.nativeRender(ConWord.engineHandle, word, "font") + "\n(" + word + ")";
         if (rendered == null) {
-            Toast.makeText(requireActivity(), "rendered is null", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("rendered is null", Toaster.ToasterConfig.SHORT_TOAST);
         }
         return rendered != null ? rendered : word;
     }

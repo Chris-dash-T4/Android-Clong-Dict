@@ -3,12 +3,10 @@ package edu.cmu.androidstuco.clongdict.rust
 import java.io.File
 import java.security.MessageDigest
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 
 import edu.cmu.androidstuco.clongdict.obj.NewDictEntry
-import edu.cmu.androidstuco.clongdict.SearchResultAdapterV2
+import edu.cmu.androidstuco.clongdict.util.Toaster
 
 /**
  * JNI entry points for `rust/clong_ime_jni` ([conlang-ime] headless engine).
@@ -66,12 +64,12 @@ object SemanticSearchHelper {
         return entry.id.toString()+":"+versionHash
     }
 
-    fun semanticSearch(query: String, documents: Iterable<NewDictEntry>, toastContext: Context?): List<Pair<Double, NewDictEntry>> {
+    fun semanticSearch(query: String, documents: Iterable<NewDictEntry>): List<Pair<Double, NewDictEntry>> {
         val entries = documents.toList()
         if (entries.isEmpty()) return emptyList()
         val documentStrings = entries.map { dictEntryToDocumentString(it) }
         val ids = entries.map { dictEntryToIdString(it) }
-        SearchResultAdapterV2.showToastSync("Starting semantic search...", Toast.LENGTH_SHORT)
+        Toaster.showToastSync("Starting semantic search...", Toast.LENGTH_SHORT)
         val raw = nativeSemanticSearch(
             query,
             documentStrings.toTypedArray(),
@@ -82,8 +80,8 @@ object SemanticSearchHelper {
         return scores.zip(entries).map { (score, entry) -> score to entry }
     }
 
-    fun getEmbeddings(documents: Iterable<NewDictEntry>, toastContext: Context?): Int {
-        SearchResultAdapterV2.showToastSync("Getting embeddings", Toast.LENGTH_SHORT)
+    fun getEmbeddings(documents: Iterable<NewDictEntry>): Int {
+        Toaster.showToastSync("Getting embeddings", Toaster.ToasterConfig.SHORT_TOAST)
         val documentStrings = documents.map { dictEntryToDocumentString(it) }
         val ids = documents.map { dictEntryToIdString(it) }
         try {
@@ -93,13 +91,13 @@ object SemanticSearchHelper {
             }
             return result
         } catch (e: Exception) {
-            SearchResultAdapterV2.showToastSync("Error getting embeddings: ${e.message}", Toast.LENGTH_LONG + 1)
+            Toaster.showToastSync("Error getting embeddings: ${e.message}", Toaster.ToasterConfig.LONG_FULL_MESSAGE)
             return -1
         }
     }
 
     @JvmStatic
     private fun progressUpdate(total: Int, current: Int) {
-        SearchResultAdapterV2.showToastSync("Progress: $current/$total", Toast.LENGTH_SHORT)
+        Toaster.showToastSync("Progress: $current/$total", Toaster.ToasterConfig.SHORT_TOAST)
     }
 }

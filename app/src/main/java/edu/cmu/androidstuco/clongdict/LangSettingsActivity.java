@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -22,6 +21,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
+
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 public class LangSettingsActivity extends AppCompatActivity {
     private static String langId = null;
@@ -49,7 +50,7 @@ public class LangSettingsActivity extends AppCompatActivity {
         saveBtn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Toast.makeText(LangSettingsActivity.this, "Saving...", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("Saving...", Toaster.ToasterConfig.SHORT_TOAST);
                 SettingsFragment sf = (SettingsFragment) getSupportFragmentManager().findFragmentById(R.id.settings);
                 if (sf == null) return false;
                 HashMap<String, Object> l_map = new HashMap<>();

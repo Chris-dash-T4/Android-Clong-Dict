@@ -22,11 +22,11 @@ import androidx.navigation.ui.NavigationUI;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivityMainBinding;
 import edu.cmu.androidstuco.clongdict.ui.login.LoginActivity;
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -88,14 +88,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void startEditWithWordLookup(@NonNull Intent editIntent, @NonNull String rawLemma) {
         if (ConWord.lang == null) {
-            Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
             return;
         }
         db.collection(ConWord.lang).get().addOnCompleteListener(task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
-                Toast.makeText(MainActivity.this,
-                        "Could not load entries to open editor.",
-                        Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("Could not load entries to open editor.", Toaster.ToasterConfig.SHORT_TOAST);
                 return;
             }
             for (QueryDocumentSnapshot doc : task.getResult()) {
@@ -106,20 +104,18 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
             }
-            Toast.makeText(MainActivity.this,
-                    "No matching entry for this lemma.",
-                    Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No matching entry for this lemma.", Toaster.ToasterConfig.SHORT_TOAST);
         });
     }
 
     private void confirmDeleteCurrentEntry() {
         EntryFragment second = findVisibleSecondFragment();
         if (second == null || second.getArguments() == null) {
-            Toast.makeText(this, "No entry to delete", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No entry to delete", Toaster.ToasterConfig.SHORT_TOAST);
             return;
         }
         if (ConWord.lang == null) {
-            Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
             return;
         }
         Bundle args = second.getArguments();
@@ -145,14 +141,12 @@ public class MainActivity extends AppCompatActivity {
         }
         String rawLemma = args.getString("word");
         if (rawLemma == null) {
-            Toast.makeText(this, "No entry identifier", Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No entry identifier", Toaster.ToasterConfig.SHORT_TOAST);
             return;
         }
         db.collection(ConWord.lang).get().addOnCompleteListener(task -> {
             if (!task.isSuccessful() || task.getResult() == null) {
-                Toast.makeText(MainActivity.this,
-                        "Could not load entries to delete.",
-                        Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("Could not load entries to delete.", Toaster.ToasterConfig.SHORT_TOAST);
                 return;
             }
             for (QueryDocumentSnapshot doc : task.getResult()) {
@@ -176,9 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
             }
-            Toast.makeText(MainActivity.this,
-                    "No matching entry to delete.",
-                    Toast.LENGTH_SHORT).show();
+            Toaster.showToastSync("No matching entry to delete.", Toaster.ToasterConfig.SHORT_TOAST);
         });
     }
 
@@ -223,24 +215,6 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
             // naturally this won't be hardcoded forever
-            /*
-            mAuth.signInWithEmailAndPassword("ccrawfor@andrew.cmu.edu","PASSWORD CHANGED")
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                // Sign in success, update UI with the signed-in user's information
-                                Toast.makeText(MainActivity.this, "createUserWithEmail:success", Toast.LENGTH_SHORT).show();
-                                FirebaseUser user = mAuth.getCurrentUser();
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                //Toast.makeText(this, "createUserWithEmail:failure", Toast.LENGTH_SHORT);
-                                Toast.makeText(MainActivity.this, "Authentication failed.",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-             */
             Intent lo = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(lo);
             return;
@@ -259,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             int i = 0;
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                //Toast.makeText(MainActivity.this,document.getId() + " => " + document.getData(), Toast.LENGTH_LONG).show();
+                                //Toaster.showToastSync(document.getId() + " => " + document.getData(), Toaster.ToasterConfig.LONG_TOAST);
                                 langs.put((String) document.getData().get("path"),(String) document.getData().get("Name"));
                                 // Populate navdrawer menu
                                 Menu drawer = binding.navView.getMenu();
@@ -354,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
         drawerMenu.setGroupEnabled(R.id.langs_menu,true);
         drawerMenu.setGroupCheckable(R.id.langs_menu, true, true);
         drawerMenu.findItem(path.hashCode()).setChecked(true).setEnabled(false);
-        Toast.makeText(this, "Loading "+name+"...", Toast.LENGTH_SHORT).show();
+        Toaster.showToastSync("Loading "+name+"...", Toaster.ToasterConfig.SHORT_TOAST);
         ConWord.destroyEngine();
         ConWord.lang = path;
         binding.contentMain.toolbar.setTitle(name);
@@ -406,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
         switch (id) {
         case R.id.action_search:
             if (ConWord.lang == null) {
-                Toast.makeText(this, "No language selected", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("No language selected", Toaster.ToasterConfig.SHORT_TOAST);
                 return false;
             }
             Intent i_s = new Intent(MainActivity.this, SearchActivity.class);
@@ -445,7 +419,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Toast.makeText(this, (resultCode == RESULT_OK)?"все хорошо":"错了", Toast.LENGTH_SHORT);
+        Toaster.showToastSync((resultCode == RESULT_OK)?"все хорошо":"错了", Toaster.ToasterConfig.SHORT_TOAST);
         if (resultCode != RESULT_OK) return;
         Uri uri = data.getData();
         try {
