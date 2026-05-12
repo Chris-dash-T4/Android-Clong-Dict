@@ -18,7 +18,6 @@ static CACHE: LazyLock<Mutex<HashMap<String, Vec<f64>>>> =
 static EMBEDDING_API_URL: &str = "https://fahmiaziz-api-embedding.hf.space/api/v1/embeddings";
 static EMBEDDING_MODEL: &str = "qwen3-0.6b";
 static MAX_BATCH_SIZE: usize = 256;
-static MAX_CACHE_SIZE: usize = 65536;
 static TIMEOUT: std::time::Duration = std::time::Duration::from_secs(MAX_BATCH_SIZE as u64);
 
 /// Absolute path to the embedding cache file (e.g. `context.filesDir/embedding_cache.bin`).
@@ -134,10 +133,6 @@ fn spawn_disk_write_thread() {
         return;
     };
     let snapshot = CACHE.lock().unwrap().clone();
-    if (snapshot.len() > MAX_CACHE_SIZE) {
-        eprintln!("embedding disk cache: cache size {} exceeds max {}", snapshot.len(), MAX_CACHE_SIZE);
-        // TODO: evict some entries instead of writing an excessively large cache file
-    }
     let _ = std::thread::Builder::new()
         .name("embedding-disk-cache".to_string())
         .spawn(move || {

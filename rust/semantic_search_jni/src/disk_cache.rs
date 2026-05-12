@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Bump when `EmbeddingCache` / bincode layout changes (keep in sync with readers).
 pub const DISK_CACHE_SCHEMA_VERSION: u32 = 1;
 
+static MAX_CACHE_SIZE: usize = 65536;
 static EXPIRATION_TIME: i64 = 60 * 60 * 24 * 30; // 30 days
 
 /// zstd compression level (3 is a reasonable default for speed vs size).
@@ -46,7 +47,7 @@ impl EmbeddingSchema {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct EmbeddingCache {
     cache: HashMap<String, EmbeddingSchema>,
     model: String,
@@ -111,14 +112,41 @@ pub fn write_inmemory_cache(
     model: &str,
     api_url: &str,
 ) -> Result<()> {
-    let mut cache = EmbeddingCache::new(model.to_string(), api_url.to_string());
+    let prev_cache = load_cache(path).unwrap_or_else(|_| EmbeddingCache::new(model.to_string(), api_url.to_string()));
+    let mut cache = if prev_cache.schema_version != DISK_CACHE_SCHEMA_VERSION || prev_cache.model != model || prev_cache.api_url != api_url {
+        eprintln!("Existing cache schema/model/api mismatch, overwriting with new cache");
+        EmbeddingCache::new(model.to_string(), api_url.to_string())
+    } else {
+        prev_cache
+    };
     for (key, value) in mem_cache {
         cache.cache.insert(
             key.clone(),
             EmbeddingSchema::new(value.clone(), key.clone()),
         );
     }
+    if cache.cache.len() > MAX_CACHE_SIZE {
+        eprintln!("embedding disk cache: cache size {} exceeds max {}, evicting old entries", cache.cache.len(), MAX_CACHE_SIZE);
+    }
     save_cache(&cache, path)
+}
+
+pub fn evict_expired_entries(cache: &EmbeddingCache) -> EmbeddingCache {
+    let mut new_cache = cache.clone();
+    // Step 1: Remove expired entries
+    new_cache
+        .cache
+        .retain(|_, v| !v.is_expired());
+    if new_cache.cache.len() > MAX_CACHE_SIZE {
+        eprintln!("embedding disk cache: cache size {} still exceeds max {}, evicting unexpired entries to reduce size", new_cache.cache.len(), MAX_CACHE_SIZE);
+        // Step 2: If still too large, evict oldest entries until under limit
+        let mut entries: Vec<_> = new_cache.cache.into_iter().collect();
+        // Sort descending by last_updated so we keep the most recently updated entries
+        entries.sort_by_key(|(_, v)| -v.last_updated);
+        entries.truncate(MAX_CACHE_SIZE);
+        new_cache.cache = entries.into_iter().collect();
+    }
+    new_cache
 }
 
 /// Read the disk cache into an in-memory cache
@@ -146,8 +174,9 @@ pub fn read_disk_cache(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::{collections::HashMap};
     use std::path::Path;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{
         load_cache, save_cache, write_inmemory_cache, read_disk_cache, EmbeddingCache,
@@ -174,5 +203,70 @@ mod tests {
         let mem_cache =
             read_disk_cache(cache_path, "test_model", "https://test_api_url/").unwrap();
         assert_eq!(mem_cache.get("test_key").unwrap(), &vec![1.0, 2.0, 3.0]);
+    }
+    
+    #[test]
+    fn test_evict_expired_entries() {
+        let model = "test_model".to_string();
+        let api_url = "https://test_api_url/".to_string();
+        let mut cache = EmbeddingCache::new(model.clone(), api_url.clone());
+        cache.cache.insert(
+            "expired_key".to_string(),
+            super::EmbeddingSchema {
+                embedding: vec![1.0, 2.0, 3.0],
+                doc_fingerprint: "expired_key".to_string(),
+                last_updated: 0, // very old timestamp to ensure expiration
+            },
+        );
+        // Insert MAX_CACHE_SIZE unexpired entries to test eviction of expired entries
+        for i in 0..super::MAX_CACHE_SIZE {
+            let embedding = vec![i as f64; 3];
+            let key = format!("key_{}", i);
+            cache.cache.insert(
+                key.clone(),
+                super::EmbeddingSchema::new(embedding, key),
+            );
+        }
+        let evicted_cache = super::evict_expired_entries(&cache);
+        assert!(!evicted_cache.cache.contains_key("expired_key"));
+        // All unexpired entries should still be present
+        for i in 0..super::MAX_CACHE_SIZE {
+            let key = format!("key_{}", i);
+            assert!(evicted_cache.cache.contains_key(&key));
+        }
+    }
+
+    #[test]
+    fn test_evict_unexpired_entries() {
+        let model = "test_model".to_string();
+        let api_url = "https://test_api_url/".to_string();
+        let mut cache = EmbeddingCache::new(model.clone(), api_url.clone());
+        cache.cache.insert(
+            "expired_key".to_string(),
+            super::EmbeddingSchema {
+                embedding: vec![1.0, 2.0, 3.0],
+                doc_fingerprint: "expired_key".to_string(),
+                last_updated: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64 - 3600_i64, // 1 hour ago, not expired but will be evicted if cache exceeds max size
+            },
+        );
+        // Insert MAX_CACHE_SIZE unexpired entries to test eviction of expired entries
+        for i in 0..super::MAX_CACHE_SIZE {
+            let embedding = vec![i as f64; 3];
+            let key = format!("key_{}", i);
+            cache.cache.insert(
+                key.clone(),
+                super::EmbeddingSchema::new(embedding, key),
+            );
+        }
+        let evicted_cache = super::evict_expired_entries(&cache);
+        assert!(!evicted_cache.cache.contains_key("expired_key"));
+        // All unexpired entries should still be present
+        for i in 0..super::MAX_CACHE_SIZE {
+            let key = format!("key_{}", i);
+            assert!(evicted_cache.cache.contains_key(&key));
+        }
     }
 }
