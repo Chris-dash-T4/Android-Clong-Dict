@@ -23,6 +23,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import edu.cmu.androidstuco.clongdict.databinding.FragmentSecondBinding;
 import edu.cmu.androidstuco.clongdict.rust.ClongImeNative;
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 public class EntryFragment extends Fragment {
 

@@ -8,6 +8,7 @@ import android.widget.Toast
 import java.io.FileNotFoundException
 
 import edu.cmu.androidstuco.clongdict.rust.ClongImeNative
+import edu.cmu.androidstuco.clongdict.util.Toaster
 
 class ConWord(private val word: String) : CharSequence, Comparable<ConWord> {
     private var sortString: CharSequence? = null

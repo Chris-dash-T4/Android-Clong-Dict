@@ -21,6 +21,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.HashMap;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivityEditBinding;
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 public class EditActivity extends AppCompatActivity {
     private ActivityEditBinding binding;

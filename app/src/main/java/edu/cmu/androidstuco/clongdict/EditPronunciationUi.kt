@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import edu.cmu.androidstuco.clongdict.databinding.ActivityEditBinding
 import edu.cmu.androidstuco.clongdict.rust.ClongImeNative
+import edu.cmu.androidstuco.clongdict.util.Toaster
 import kotlin.math.max
 import kotlin.math.min
 

@@ -26,6 +26,7 @@ import edu.cmu.androidstuco.clongdict.R;
 import edu.cmu.androidstuco.clongdict.ui.login.LoginViewModel;
 import edu.cmu.androidstuco.clongdict.ui.login.LoginViewModelFactory;
 import edu.cmu.androidstuco.clongdict.databinding.ActivityLoginBinding;
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -130,7 +131,11 @@ public class LoginActivity extends AppCompatActivity {
         Toaster.showToastSync(welcome, Toaster.ToasterConfig.LONG_TOAST);
     }
 
-    private void showLoginFailed(@StringRes Integer errorString) {
+    private void showLoginFailed(@StringRes Integer errorStringIdentifier) {
+        if (errorStringIdentifier == null) {
+            return;
+        }
+        String errorString = getString(errorStringIdentifier);
         Toaster.showToastSync(errorString, Toaster.ToasterConfig.SHORT_TOAST);
     }
 }

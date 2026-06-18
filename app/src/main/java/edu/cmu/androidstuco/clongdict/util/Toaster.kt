@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.snackbar.Snackbar
 import java.lang.ref.WeakReference
+import java.util.concurrent.Callable
 
 interface Toaster {
     fun logToast(message: String) {
@@ -113,9 +114,9 @@ interface Toaster {
          * activity is registered via lifecycle callbacks; otherwise falls back to a long Toast.
          */
         @JvmStatic
-        fun showToastRunnable(message: String, config: ToasterConfig = ToasterConfig.SHORT_TOAST): Runnable? {
+        fun showToastCallable(message: String, config: ToasterConfig = ToasterConfig.SHORT_TOAST): Callable<Snackbar?>? {
             val ctx = toastApplicationContext ?: return null
-            val show = Runnable {
+            return Callable {
                 when (config) {
                     ToasterConfig.LONG_FULL_MESSAGE -> {
                         val s = showSnackbar(message, Snackbar.LENGTH_LONG, ctx)
@@ -124,44 +125,42 @@ interface Toaster {
                                 showFullMessageDialog(snackbarActivityRef.get()!!, message)
                             }
                         s?.show()
-                        return@Runnable s
+                        s
                     }
                     ToasterConfig.LONG_SNACKBAR -> {
                         val s = showSnackbar(message, Snackbar.LENGTH_LONG, ctx)
                         s?.show()
-                        return@Runnable s
+                        s
                     }
                     ToasterConfig.INDEFINITE_SNACKBAR -> {
                         val s = showSnackbar(message, Snackbar.LENGTH_INDEFINITE, ctx)
                         s?.show()
-                        return@Runnable s
+                        s
                     }
                     ToasterConfig.SHORT_SNACKBAR -> {
                         val s = showSnackbar(message, Snackbar.LENGTH_SHORT, ctx)
                         s?.show()
-                        return@Runnable s
+                        s
                     }
                     ToasterConfig.LONG_TOAST -> {
                         Toast.makeText(ctx, message, Toast.LENGTH_LONG).show()
-                        return@Runnable null
+                        null
                     }
                     ToasterConfig.SHORT_TOAST -> {
                         Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show()
-                        return@Runnable null
+                        null
                     }
                 }
             }
-            return show
         }
 
         @JvmStatic
         fun showToastSync(message: String, config: ToasterConfig = ToasterConfig.SHORT_TOAST): Snackbar? {
-            val runnable = showToastRunnable(message, config) ?: return null
+            val callable = showToastCallable(message, config) ?: return null
             if (Looper.myLooper() == Looper.getMainLooper()) {
-                return runnable.run() as Snackbar
+                return callable.call()
             } else {
-                mainHandler.post(runnable)
-                // TODO return the Snackbar???
+                mainHandler.post { callable.call() }
                 return null
             }
         }

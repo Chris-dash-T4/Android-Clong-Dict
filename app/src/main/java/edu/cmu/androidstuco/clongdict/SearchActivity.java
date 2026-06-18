@@ -18,12 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.Locale;
 import java.util.Objects;
 
 import edu.cmu.androidstuco.clongdict.databinding.ActivitySearchBinding;
+import edu.cmu.androidstuco.clongdict.util.Toaster;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -139,16 +139,16 @@ public class SearchActivity extends AppCompatActivity {
             boolean pathChanged = srAdapter == null
                     || !Objects.equals(langPath, srAdapter.getBackingCollectionPath());
             if (pathChanged) {
-                Toast.makeText(this,"Loading "+langPath+"...", Toast.LENGTH_SHORT).show();
+                Toaster.showToastSync("Loading "+langPath+"...", Toaster.ToasterConfig.SHORT_TOAST);
                 if (langPath != null) {
-                    //Toast.makeText(this,"langPath: "+langPath, Toast.LENGTH_SHORT).show();
+                    //Toaster.showToastSync("langPath: "+langPath, Toaster.ToasterConfig.SHORT_TOAST);
                     srAdapter = new SearchResultAdapterV2(
                             this,
                             FirebaseFirestore.getInstance(),
                             langPath,
                             qNorm,
                             this::setSemanticEmbeddingLoading);
-                    //Toast.makeText(this,"srAdapter created successfully", Toast.LENGTH_SHORT).show();
+                    //Toaster.showToastSync("srAdapter created successfully", Toaster.ToasterConfig.SHORT_TOAST);
                 } else {
                     srAdapter = new SearchResultAdapterV2(this, qNorm, this::setSemanticEmbeddingLoading);
                 }
