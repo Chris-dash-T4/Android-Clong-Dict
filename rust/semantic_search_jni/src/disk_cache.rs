@@ -19,14 +19,14 @@ static EXPIRATION_TIME: i64 = 60 * 60 * 24 * 30; // 30 days
 const ZSTD_LEVEL: i32 = 3;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct EmbeddingSchema {
-    embedding: Vec<f64>,
+pub struct EmbeddingSchema {
+    pub embedding: Vec<f64>,
     doc_fingerprint: String,
     last_updated: i64,
 }
 
 impl EmbeddingSchema {
-    fn new(embedding: Vec<f64>, doc_fingerprint: String) -> Self {
+    pub fn new(embedding: Vec<f64>, doc_fingerprint: String) -> Self {
         Self {
             embedding,
             doc_fingerprint,
@@ -107,7 +107,7 @@ pub fn save_cache(cache: &EmbeddingCache, path: &Path) -> Result<()> {
 
 /// Write the in-memory cache to the disk cache
 pub fn write_inmemory_cache(
-    mem_cache: &HashMap<String, Vec<f64>>,
+    mem_cache: &HashMap<String, EmbeddingSchema>,
     path: &Path,
     model: &str,
     api_url: &str,
@@ -122,7 +122,7 @@ pub fn write_inmemory_cache(
     for (key, value) in mem_cache {
         cache.cache.insert(
             key.clone(),
-            EmbeddingSchema::new(value.clone(), key.clone()),
+            value.clone(),
         );
     }
     if cache.cache.len() > MAX_CACHE_SIZE {
@@ -154,7 +154,7 @@ pub fn read_disk_cache(
     path: &Path,
     model: &str,
     api_url: &str,
-) -> Result<HashMap<String, Vec<f64>>> {
+) -> Result<HashMap<String, EmbeddingSchema>> {
     let cache = load_cache(path)?;
     if cache.schema_version != DISK_CACHE_SCHEMA_VERSION {
         return Err(anyhow!("cache schema_version mismatch"));
@@ -167,7 +167,7 @@ pub fn read_disk_cache(
         if value.is_expired() {
             continue;
         }
-        mem_cache.insert(key, value.embedding);
+        mem_cache.insert(key, value);
     }
     Ok(mem_cache)
 }
@@ -179,7 +179,8 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{
-        load_cache, save_cache, write_inmemory_cache, read_disk_cache, EmbeddingCache,
+        load_cache, save_cache, write_inmemory_cache, read_disk_cache,
+        EmbeddingCache, EmbeddingSchema,
     };
 
     #[test]
@@ -197,12 +198,12 @@ mod tests {
     #[test]
     fn test_write_and_read_inmemory_cache() {
         let mut mem_cache = HashMap::new();
-        mem_cache.insert("test_key".to_string(), vec![1.0, 2.0, 3.0]);
+        mem_cache.insert("test_key".to_string(), EmbeddingSchema::new(vec![1.0, 2.0, 3.0], "test_key".to_string()));
         let cache_path = Path::new("test_mem_cache.bin");
         write_inmemory_cache(&mem_cache, cache_path, "test_model", "https://test_api_url/").unwrap();
         let mem_cache =
             read_disk_cache(cache_path, "test_model", "https://test_api_url/").unwrap();
-        assert_eq!(mem_cache.get("test_key").unwrap(), &vec![1.0, 2.0, 3.0]);
+        assert_eq!(mem_cache.get("test_key").unwrap().embedding, vec![1.0, 2.0, 3.0]);
     }
     
     #[test]
@@ -268,5 +269,27 @@ mod tests {
             let key = format!("key_{}", i);
             assert!(evicted_cache.cache.contains_key(&key));
         }
+    }
+    
+    #[test]
+    fn test_inmemory_cache_preserves_dates() {
+        let mut mem_cache = HashMap::new();
+        mem_cache.insert("test_key_1".to_string(), EmbeddingSchema::new(vec![1.0, 2.0, 3.0], "test_key".to_string()));
+        mem_cache.insert("test_key_2".to_string(), EmbeddingSchema {
+            embedding: vec![1.0, 2.0, 3.0],
+            doc_fingerprint: "test_key_2".to_string(),
+            last_updated: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64 - 3600_i64, // 1 hour ago
+        });
+        let cache_path = Path::new("test_mem_cache.bin");
+        write_inmemory_cache(&mem_cache, cache_path, "test_model", "https://test_api_url/").unwrap();
+        let mem_cache =
+            read_disk_cache(cache_path, "test_model", "https://test_api_url/").unwrap();
+        assert_eq!(mem_cache.get("test_key_1").unwrap().embedding, vec![1.0, 2.0, 3.0]);
+        assert!(mem_cache.get("test_key_1").unwrap().last_updated > 0);
+        assert_eq!(mem_cache.get("test_key_2").unwrap().embedding, vec![1.0, 2.0, 3.0]);
+        assert!(mem_cache.get("test_key_2").unwrap().last_updated < mem_cache.get("test_key_1").unwrap().last_updated);
     }
 }

@@ -1,6 +1,7 @@
 #![allow(non_snake_case)] // JNI `Java_*` exports must match JVM name mangling exactly
 
 mod disk_cache;
+use disk_cache::EmbeddingSchema;
 
 use jni::objects::{JClass, JObject, JObjectArray, JString, JValue};
 use jni::sys::jobject;
@@ -13,7 +14,7 @@ use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 use anyhow::Result;
 
-static CACHE: LazyLock<Mutex<HashMap<String, Vec<f64>>>> =
+static CACHE: LazyLock<Mutex<HashMap<String, EmbeddingSchema>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 static EMBEDDING_API_URL: &str = "https://fahmiaziz-api-embedding.hf.space/api/v1/embeddings";
 static EMBEDDING_MODEL: &str = "qwen3-0.6b";
@@ -299,7 +300,7 @@ fn get_embeddings(
             }
             for (idx, emb) in new_embeddings.into_iter().enumerate() {
                 let (_, id) = batch_pairs[idx];
-                cache.insert(id.to_string(), emb);
+                cache.insert(id.to_string(), EmbeddingSchema::new(emb, id.to_string()));
             }
             n_fetched += batch.len();
             if n_fetched < documents.len() {
@@ -322,14 +323,14 @@ fn get_embeddings(
     let n_cols = cache
         .get(ids[0].as_str())
         .expect("embedding present after fetch")
-        .len();
+        .embedding.len();
     let mut flat: Vec<f64> = Vec::with_capacity(n_rows * n_cols);
     for id in ids {
         flat.extend(
             cache
                 .get(id.as_str())
                 .expect("embedding in cache")
-                .iter()
+                .embedding.iter()
                 .copied(),
         );
     }
